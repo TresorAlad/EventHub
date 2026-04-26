@@ -1,7 +1,6 @@
-import React from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, StatusBar,
+  TouchableOpacity, StatusBar, Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
@@ -24,7 +23,10 @@ export default function DashboardScreen({ navigation }: any) {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.avatar} />
+          <Image 
+            source={require('../../assets/logo.jpeg')} 
+            style={styles.avatar} 
+          />
           <Text style={styles.appName}>EventHub</Text>
           <TouchableOpacity style={styles.searchIcon}>
             <Ionicons name="search-outline" size={22} color={Colors.primary} />

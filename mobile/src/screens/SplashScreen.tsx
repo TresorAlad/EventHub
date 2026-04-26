@@ -6,6 +6,7 @@ import {
   Animated,
   StatusBar,
   Dimensions,
+  Image,
 } from 'react-native';
 import { Colors, FontSize, FontWeight, Fonts } from '../theme';
 
@@ -46,11 +47,11 @@ export default function SplashScreen({ navigation }: any) {
 
       {/* Logo */}
       <Animated.View style={[styles.center, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
-        <View style={styles.logoCircle}>
-          <Text style={styles.logoText}>
-            <Text style={styles.logoE}>e</Text>vhub
-          </Text>
-        </View>
+        <Image 
+          source={require('../../assets/logo.jpeg')} 
+          style={styles.logoCircle} 
+          resizeMode="contain"
+        />
         <Animated.Text style={[styles.appName, { transform: [{ translateY: slideAnim }] }]}>
           EventHub
         </Animated.Text>
