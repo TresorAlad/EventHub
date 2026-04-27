@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,11 +14,42 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
+import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
+import { auth } from '../config/firebase';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function SignInScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPwd, setShowPwd] = useState(false);
+  
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    androidClientId: "YOUR_ANDROID_CLIENT_ID",
+    iosClientId: "YOUR_IOS_CLIENT_ID",
+    webClientId: "YOUR_WEB_CLIENT_ID",
+  });
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const { id_token } = response.params;
+      const credential = GoogleAuthProvider.credential(id_token);
+      signInWithCredential(auth, credential)
+        .then(() => {
+          navigation.replace('Main');
+        })
+        .catch((error) => {
+          console.error(error);
+          Alert.alert('Error', 'Failed to sign in with Google');
+        });
+    }
+  }, [response]);
+
+  const handleGoogleSignIn = () => {
+    promptAsync();
+  };
 
   const handleSignIn = () => {
     if (!email || !password) {
@@ -106,7 +137,12 @@ export default function SignInScreen({ navigation }: any) {
 
           {/* Social */}
           <View style={styles.socialRow}>
-            <TouchableOpacity style={styles.socialBtn} activeOpacity={0.85}>
+            <TouchableOpacity 
+              style={styles.socialBtn} 
+              activeOpacity={0.85}
+              onPress={handleGoogleSignIn}
+              disabled={!request}
+            >
               <Ionicons name="logo-google" size={18} color={Colors.textPrimary} />
               <Text style={styles.socialText}>Google</Text>
             </TouchableOpacity>
@@ -217,9 +253,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: FontSize.md,
     color: Colors.textPrimary,
-  },
-  placeholder: {
-    color: Colors.textMuted,
   },
   signInBtn: {
     backgroundColor: Colors.primary,
