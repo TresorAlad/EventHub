@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, TextInput, StatusBar, Image,
+  TouchableOpacity, TextInput, StatusBar, Image, Alert, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
+import { createEvent } from '../services/api';
 
 const CATEGORIES = ['Innovation & Fintech', 'Hackathon', 'Meetup', 'Workshop', 'Conférence', 'Pitch Night'];
 
@@ -15,6 +17,8 @@ export default function CreateEventScreen({ navigation }: any) {
   const [time, setTime] = useState('');
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
+  const [image, setImage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const [showCatPicker, setShowCatPicker] = useState(false);
 
   // New logic fields
@@ -22,6 +26,52 @@ export default function CreateEventScreen({ navigation }: any) {
   const [externalLink, setExternalLink] = useState('');
   const [participationMode, setParticipationMode] = useState<'online' | 'in-person'>('in-person');
   const [onlineLink, setOnlineLink] = useState('');
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  const handlePublish = async () => {
+    if (!title || !date || !location || !description) {
+      Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('category', category);
+      formData.append('date', date); // In real app, format this as ISO
+      formData.append('location', participationMode === 'in-person' ? location : onlineLink);
+      formData.append('description', description);
+      
+      if (image) {
+        const filename = image.split('/').pop();
+        const match = /\.(\w+)$/.exec(filename || '');
+        const type = match ? `image/${match[1]}` : `image`;
+        formData.append('image', { uri: image, name: filename, type } as any);
+      }
+
+      await createEvent(formData);
+      Alert.alert('Succès', 'Votre événement a été publié !');
+      navigation.goBack();
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Erreur', "Échec de la publication de l'événement.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -40,38 +90,20 @@ export default function CreateEventScreen({ navigation }: any) {
         <Text style={styles.pageTitle}>Créer un événement</Text>
         <Text style={styles.pageSubtitle}>Propulsez l'innovation au Togo en partageant votre événement.</Text>
 
-        {/* External Platform Question */}
-        <View style={styles.logicCard}>
-          <View style={styles.logicRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.logicTitle}>Déjà publié ailleurs ?</Text>
-              <Text style={styles.logicSub}>Si oui, le bouton redirigera vers votre site.</Text>
-            </View>
-            <TouchableOpacity 
-              onPress={() => setIsExternal(!isExternal)}
-              style={[styles.toggle, isExternal && styles.toggleActive]}
-            >
-              <View style={[styles.toggleCircle, isExternal && styles.toggleCircleActive]} />
-            </TouchableOpacity>
-          </View>
-          
-          {isExternal && (
-            <View style={[styles.field, { marginTop: 15 }]}>
-              <Text style={styles.label}>LIEN D'INSCRIPTION EXTERNE</Text>
-              <View style={styles.inputBox}>
-                <TextInput 
-                  style={styles.input} 
-                  value={externalLink} 
-                  onChangeText={setExternalLink} 
-                  placeholder="https://votre-site.com/inscription"
-                  autoCapitalize="none"
-                />
-              </View>
-            </View>
+        {/* Image Picker */}
+        <TouchableOpacity style={styles.uploadBox} onPress={pickImage}>
+          {image ? (
+            <Image source={{ uri: image }} style={{ width: '100%', height: '100%', borderRadius: 24 }} />
+          ) : (
+            <>
+              <Ionicons name="cloud-upload-outline" size={32} color={Colors.primary} />
+              <Text style={styles.uploadTitle}>CLIQUEZ POUR UPLOADER L'AFFICHE</Text>
+              <Text style={styles.uploadSub}>PNG, JPG jusqu'à 5MB</Text>
+            </>
           )}
-        </View>
+        </TouchableOpacity>
 
-        {/* Mode Selector */}
+        {/* ... rest of the form ... */}
         <View style={styles.modeContainer}>
           <TouchableOpacity 
             style={[styles.modeBtn, participationMode === 'in-person' && styles.modeBtnActive]} 
@@ -89,7 +121,7 @@ export default function CreateEventScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
 
-        {/* Event Title */}
+        {/* Title */}
         <View style={styles.field}>
           <Text style={styles.label}>TITRE DE L'ÉVÉNEMENT</Text>
           <View style={styles.inputBox}>
@@ -102,7 +134,7 @@ export default function CreateEventScreen({ navigation }: any) {
           </View>
         </View>
 
-        {/* Location / Meeting Link */}
+        {/* Location / Link */}
         <View style={styles.field}>
           <Text style={styles.label}>
             {participationMode === 'in-person' ? 'LIEU OU LIEN MAPS' : 'LIEN DE RÉUNION (ZOOM, MEET, etc.)'}
@@ -140,25 +172,16 @@ export default function CreateEventScreen({ navigation }: any) {
         {/* Date & Time */}
         <View style={styles.row}>
           <View style={[styles.field, { flex: 1 }]}>
-            <Text style={styles.label}>DATE</Text>
+            <Text style={styles.label}>DATE (AAAA-MM-JJ)</Text>
             <View style={styles.inputBox}>
-              <TextInput style={styles.input} value={date} onChangeText={setDate} placeholder="mm/dd/yy" placeholderTextColor={Colors.textMuted} />
+              <TextInput style={styles.input} value={date} onChangeText={setDate} placeholder="2026-05-15" placeholderTextColor={Colors.textMuted} />
             </View>
           </View>
           <View style={[styles.field, { flex: 1 }]}>
-            <Text style={styles.label}>TIME</Text>
+            <Text style={styles.label}>HEURE</Text>
             <View style={styles.inputBox}>
-              <TextInput style={styles.input} value={time} onChangeText={setTime} placeholder="--:-- --" placeholderTextColor={Colors.textMuted} />
+              <TextInput style={styles.input} value={time} onChangeText={setTime} placeholder="18:30" placeholderTextColor={Colors.textMuted} />
             </View>
-          </View>
-        </View>
-
-        {/* Location */}
-        <View style={styles.field}>
-          <Text style={styles.label}>LOCATION</Text>
-          <View style={[styles.inputBox, { flexDirection: 'row', alignItems: 'center', gap: 10 }]}>
-            <Ionicons name="location-outline" size={18} color={Colors.primary} />
-            <TextInput style={[styles.input, { flex: 1 }]} value={location} onChangeText={setLocation} placeholder="Venue or Digital Link" placeholderTextColor={Colors.textMuted} />
           </View>
         </View>
 
@@ -170,7 +193,7 @@ export default function CreateEventScreen({ navigation }: any) {
               style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
               value={description}
               onChangeText={setDescription}
-              placeholder="Describe the mission of your event..."
+              placeholder="Décrivez votre événement..."
               placeholderTextColor={Colors.textMuted}
               multiline
             />
@@ -178,9 +201,15 @@ export default function CreateEventScreen({ navigation }: any) {
         </View>
 
         {/* Publish Button */}
-        <TouchableOpacity style={styles.publishBtn} activeOpacity={0.88}>
-          <Ionicons name="send" size={18} color={Colors.white} />
-          <Text style={styles.publishText}>Publish Event</Text>
+        <TouchableOpacity style={styles.publishBtn} activeOpacity={0.88} onPress={handlePublish} disabled={loading}>
+          {loading ? (
+            <ActivityIndicator color={Colors.white} />
+          ) : (
+            <>
+              <Ionicons name="send" size={18} color={Colors.white} />
+              <Text style={styles.publishText}>Publier l'événement</Text>
+            </>
+          )}
         </TouchableOpacity>
       </ScrollView>
     </View>
