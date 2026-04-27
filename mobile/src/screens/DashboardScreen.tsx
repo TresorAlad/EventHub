@@ -1,6 +1,6 @@
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, StatusBar, Image,
+  TouchableOpacity, StatusBar, Image, Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
@@ -28,13 +28,13 @@ export default function DashboardScreen({ navigation }: any) {
             style={styles.avatar} 
           />
           <Text style={styles.appName}>EventHub</Text>
-          <TouchableOpacity style={styles.searchIcon}>
+          <TouchableOpacity style={styles.searchIcon} onPress={() => Alert.alert('Search', 'Recherche en cours...')}>
             <Ionicons name="search-outline" size={22} color={Colors.primary} />
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.greeting}>Morning, Alex</Text>
-        <Text style={styles.greetingSub}>Here's what's happening with your tech events today.</Text>
+        <Text style={styles.greeting}>Bonjour, Organisateur 👋</Text>
+        <Text style={styles.greetingSub}>Voici l'état actuel de vos événements technologiques aujourd'hui.</Text>
 
         {/* Main stat card */}
         <View style={styles.mainStatCard}>

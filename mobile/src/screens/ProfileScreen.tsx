@@ -1,18 +1,23 @@
-import React from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, StatusBar, Image,
+  TouchableOpacity, StatusBar, Image, Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
 
 const SETTINGS = [
-  { icon: 'create-outline', label: 'Edit profile' },
-  { icon: 'notifications-outline', label: 'Notifications' },
-  { icon: 'shield-outline', label: 'Privacy & Security' },
+  { id: 'edit', icon: 'create-outline', label: 'Edit profile' },
+  { id: 'notif', icon: 'notifications-outline', label: 'Notifications' },
+  { id: 'privacy', icon: 'shield-outline', label: 'Privacy & Security' },
 ];
 
-export default function ProfileScreen({ navigation }: any) {
+export default function ProfileScreen({ navigation, route }: any) {
+  const userType = route.params?.userType || 'User';
+
+  const handleSettingPress = (label: string) => {
+    Alert.alert(label, `Cette fonctionnalité "${label}" sera bientôt disponible.`);
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
@@ -21,24 +26,30 @@ export default function ProfileScreen({ navigation }: any) {
         <View style={styles.header}>
           <Text style={styles.appName}>EventHub</Text>
           <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.iconBtn}>
+            <TouchableOpacity style={styles.iconBtn} onPress={() => handleSettingPress('Search')}>
               <Ionicons name="search-outline" size={22} color={Colors.primary} />
             </TouchableOpacity>
-            <View style={styles.avatarSmall} />
+            <Image 
+              source={require('../../assets/logo.jpeg')} 
+              style={styles.avatarSmall} 
+            />
           </View>
         </View>
 
         {/* Profile section */}
         <View style={styles.profileSection}>
           <View style={styles.avatarWrapper}>
-            <View style={styles.avatarLarge} />
+            <Image 
+              source={require('../../assets/logo.jpeg')} 
+              style={styles.avatarLarge} 
+            />
             <View style={styles.verifiedBadge}>
               <Ionicons name="checkmark-circle" size={22} color="#8b5cf6" />
             </View>
           </View>
-          <Text style={styles.name}>Farida Mensah</Text>
+          <Text style={styles.name}>{userType === 'Organizer' ? 'Organisateur EventHub' : 'Farida Mensah'}</Text>
           <Text style={styles.bio}>
-            Tech enthusiast and community builder based in Lomé. Passionate about AI and Togo's startup ecosystem.
+            {userType === 'Organizer' ? 'Organisateur officiel d\'événements tech au Togo.' : 'Passionnée de tech et membre active de la communauté EventHub.'}
           </Text>
         </View>
 
@@ -53,10 +64,15 @@ export default function ProfileScreen({ navigation }: any) {
         </View>
 
         {/* Settings */}
-        <Text style={styles.sectionLabel}>ACCOUNT SETTINGS</Text>
+        <Text style={styles.sectionLabel}>PARAMÈTRES DU COMPTE</Text>
         <View style={styles.settingsCard}>
           {SETTINGS.map((s, i) => (
-            <TouchableOpacity key={i} style={[styles.settingRow, i < SETTINGS.length - 1 && styles.settingBorder]} activeOpacity={0.7}>
+            <TouchableOpacity 
+              key={i} 
+              style={[styles.settingRow, i < SETTINGS.length - 1 && styles.settingBorder]} 
+              activeOpacity={0.7}
+              onPress={() => handleSettingPress(s.label)}
+            >
               <View style={styles.settingIcon}>
                 <Ionicons name={s.icon as any} size={20} color={Colors.primary} />
               </View>

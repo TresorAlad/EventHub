@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, TextInput, StatusBar,
+  TouchableOpacity, TextInput, StatusBar, Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
@@ -17,6 +17,12 @@ export default function CreateEventScreen({ navigation }: any) {
   const [description, setDescription] = useState('');
   const [showCatPicker, setShowCatPicker] = useState(false);
 
+  // New logic fields
+  const [isExternal, setIsExternal] = useState(false);
+  const [externalLink, setExternalLink] = useState('');
+  const [participationMode, setParticipationMode] = useState<'online' | 'in-person'>('in-person');
+  const [onlineLink, setOnlineLink] = useState('');
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
@@ -27,30 +33,88 @@ export default function CreateEventScreen({ navigation }: any) {
           <Ionicons name="arrow-back" size={22} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>EventHub</Text>
-        <View style={styles.avatar} />
+        <Image source={require('../../assets/logo.jpeg')} style={styles.avatar} />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        <Text style={styles.pageTitle}>Create New Event</Text>
-        <Text style={styles.pageSubtitle}>Host your next innovation hub and connect with Togo's tech ecosystem.</Text>
+        <Text style={styles.pageTitle}>Créer un événement</Text>
+        <Text style={styles.pageSubtitle}>Propulsez l'innovation au Togo en partageant votre événement.</Text>
 
-        {/* Upload Cover */}
-        <TouchableOpacity style={styles.uploadBox} activeOpacity={0.8}>
-          <Ionicons name="image-outline" size={36} color={Colors.primary} />
-          <Text style={styles.uploadTitle}>UPLOAD EVENT COVER</Text>
-          <Text style={styles.uploadSub}>Recommended: 16:9 ratio</Text>
-        </TouchableOpacity>
+        {/* External Platform Question */}
+        <View style={styles.logicCard}>
+          <View style={styles.logicRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.logicTitle}>Déjà publié ailleurs ?</Text>
+              <Text style={styles.logicSub}>Si oui, le bouton redirigera vers votre site.</Text>
+            </View>
+            <TouchableOpacity 
+              onPress={() => setIsExternal(!isExternal)}
+              style={[styles.toggle, isExternal && styles.toggleActive]}
+            >
+              <View style={[styles.toggleCircle, isExternal && styles.toggleCircleActive]} />
+            </TouchableOpacity>
+          </View>
+          
+          {isExternal && (
+            <View style={[styles.field, { marginTop: 15 }]}>
+              <Text style={styles.label}>LIEN D'INSCRIPTION EXTERNE</Text>
+              <View style={styles.inputBox}>
+                <TextInput 
+                  style={styles.input} 
+                  value={externalLink} 
+                  onChangeText={setExternalLink} 
+                  placeholder="https://votre-site.com/inscription"
+                  autoCapitalize="none"
+                />
+              </View>
+            </View>
+          )}
+        </View>
+
+        {/* Mode Selector */}
+        <View style={styles.modeContainer}>
+          <TouchableOpacity 
+            style={[styles.modeBtn, participationMode === 'in-person' && styles.modeBtnActive]} 
+            onPress={() => setParticipationMode('in-person')}
+          >
+            <Ionicons name="location" size={20} color={participationMode === 'in-person' ? '#fff' : Colors.primary} />
+            <Text style={[styles.modeBtnText, participationMode === 'in-person' && styles.modeBtnTextActive]}>Présentiel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.modeBtn, participationMode === 'online' && styles.modeBtnActive]} 
+            onPress={() => setParticipationMode('online')}
+          >
+            <Ionicons name="videocam" size={20} color={participationMode === 'online' ? '#fff' : Colors.primary} />
+            <Text style={[styles.modeBtnText, participationMode === 'online' && styles.modeBtnTextActive]}>En Ligne</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Event Title */}
         <View style={styles.field}>
-          <Text style={styles.label}>EVENT TITLE</Text>
+          <Text style={styles.label}>TITRE DE L'ÉVÉNEMENT</Text>
           <View style={styles.inputBox}>
             <TextInput
               style={styles.input}
               value={title}
               onChangeText={setTitle}
-              placeholder="e.g. Lomé Tech Summit 2026"
-              placeholderTextColor={Colors.textMuted}
+              placeholder="Ex: Lomé Tech Summit 2026"
+            />
+          </View>
+        </View>
+
+        {/* Location / Meeting Link */}
+        <View style={styles.field}>
+          <Text style={styles.label}>
+            {participationMode === 'in-person' ? 'LIEU OU LIEN MAPS' : 'LIEN DE RÉUNION (ZOOM, MEET, etc.)'}
+          </Text>
+          <View style={[styles.inputBox, { flexDirection: 'row', alignItems: 'center', gap: 10 }]}>
+            <Ionicons name={participationMode === 'in-person' ? 'map-outline' : 'link-outline'} size={18} color={Colors.primary} />
+            <TextInput 
+              style={[styles.input, { flex: 1 }]} 
+              value={participationMode === 'in-person' ? location : onlineLink} 
+              onChangeText={participationMode === 'in-person' ? setLocation : setOnlineLink} 
+              placeholder={participationMode === 'in-person' ? "Venue or Google Maps Link" : "https://zoom.us/j/..."} 
+              autoCapitalize="none"
             />
           </View>
         </View>
@@ -130,18 +194,50 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: FontSize.lg, fontWeight: FontWeight.extrabold, color: Colors.primary },
   avatar: { width: 38, height: 38, borderRadius: 99, backgroundColor: Colors.backgroundDark, borderWidth: 2, borderColor: Colors.primary },
   scroll: { paddingHorizontal: Spacing.md, paddingBottom: 40 },
-  pageTitle: { fontSize: FontSize.xxl + 4, fontWeight: FontWeight.extrabold, color: Colors.primary, marginTop: Spacing.sm },
-  pageSubtitle: { fontSize: FontSize.md, color: Colors.textSecondary, marginTop: 6, marginBottom: Spacing.lg, lineHeight: 22 },
+  pageTitle: { fontSize: FontSize.xxxl, fontWeight: FontWeight.extrabold, color: Colors.primary, marginTop: Spacing.sm },
+  pageSubtitle: { fontSize: FontSize.sm, color: Colors.textSecondary, marginTop: 6, marginBottom: Spacing.lg, lineHeight: 20 },
+  logicCard: { 
+    backgroundColor: Colors.white, 
+    borderRadius: 24, 
+    padding: 24, 
+    marginBottom: Spacing.lg, 
+    borderWidth: 1.5,
+    borderColor: 'rgba(3,4,94,0.08)',
+    ...Shadows.card 
+  },
+  logicRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  logicTitle: { fontSize: 18, fontWeight: '800', color: Colors.primary },
+  logicSub: { fontSize: 13, color: Colors.textSecondary, marginTop: 4, lineHeight: 18 },
+  toggle: { width: 56, height: 32, borderRadius: 16, backgroundColor: '#e2e8f0', padding: 4 },
+  toggleActive: { backgroundColor: '#22c55e' },
+  toggleCircle: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#fff' },
+  toggleCircleActive: { alignSelf: 'flex-end' },
+  modeContainer: { flexDirection: 'row', gap: 14, marginBottom: Spacing.lg },
+  modeBtn: { 
+    flex: 1, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    gap: 10, 
+    backgroundColor: Colors.white, 
+    borderRadius: 20, 
+    paddingVertical: 18, 
+    borderWidth: 2, 
+    borderColor: '#e2e8f0' 
+  },
+  modeBtnActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  modeBtnText: { fontSize: 15, fontWeight: '800', color: Colors.primary },
+  modeBtnTextActive: { color: '#fff' },
   uploadBox: {
     borderWidth: 2,
     borderColor: Colors.primary,
     borderStyle: 'dashed',
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.xl,
+    borderRadius: 24,
+    padding: 32,
     alignItems: 'center',
-    gap: 8,
-    backgroundColor: 'rgba(3,4,94,0.03)',
-    marginBottom: Spacing.lg,
+    gap: 12,
+    backgroundColor: 'rgba(3,4,94,0.02)',
+    marginBottom: Spacing.xl,
   },
   uploadTitle: { fontSize: FontSize.sm, fontWeight: FontWeight.bold, color: Colors.primary, letterSpacing: 1 },
   uploadSub: { fontSize: FontSize.sm, color: Colors.textMuted },
@@ -157,9 +253,15 @@ const styles = StyleSheet.create({
   dropdownTextActive: { color: Colors.primary, fontWeight: FontWeight.bold },
   row: { flexDirection: 'row', gap: Spacing.sm },
   publishBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
-    backgroundColor: Colors.primary, borderRadius: BorderRadius.full,
-    paddingVertical: 18, ...Shadows.button, marginBottom: 20,
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    gap: 12,
+    backgroundColor: Colors.primary, 
+    borderRadius: BorderRadius.full,
+    paddingVertical: 20, 
+    ...Shadows.button,
+    marginBottom: 40,
   },
-  publishText: { fontSize: FontSize.md, fontWeight: FontWeight.bold, color: Colors.white },
+  publishText: { fontSize: 18, fontWeight: '800', color: Colors.white, letterSpacing: 0.5 },
 });

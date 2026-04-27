@@ -1,7 +1,6 @@
-import React from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, Image, StatusBar,
+  TouchableOpacity, Image, StatusBar, Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
@@ -12,6 +11,32 @@ const SPEAKERS = [
 ];
 
 export default function EventDetailsScreen({ navigation, route }: any) {
+  const event = route.params?.event || {};
+  const isExternal = event.isExternal || false;
+  const registrationLink = event.registrationLink || 'https://external-platform.com';
+  const participationMode = event.mode || 'in-person'; // 'online' or 'in-person'
+
+  const handleRegister = () => {
+    if (isExternal) {
+      Alert.alert(
+        'Redirection',
+        'Cet événement est géré sur une plateforme externe. Vous allez être redirigé vers le site partenaire.',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          { text: 'Continuer', onPress: () => Alert.alert('Navigateur', `Redirection vers : ${registrationLink}`) }
+        ]
+      );
+    } else {
+      Alert.alert(
+        'Confirmation',
+        'Voulez-vous valider votre participation automatiquement avec les informations de votre profil ?',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          { text: 'Confirmer', onPress: () => Alert.alert('Succès', 'Votre inscription a été validée avec succès dans l\'application !') }
+        ]
+      );
+    }
+  };
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
@@ -26,10 +51,16 @@ export default function EventDetailsScreen({ navigation, route }: any) {
             </TouchableOpacity>
             <Text style={styles.topTitle}>EventHub</Text>
             <View style={styles.topRight}>
-              <TouchableOpacity style={styles.iconBtn}>
+              <TouchableOpacity style={styles.iconBtn} onPress={() => Alert.alert('Partager', 'Lien de l\'événement copié !')}>
+                <Ionicons name="share-social-outline" size={20} color={Colors.primary} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.iconBtn} onPress={() => Alert.alert('Search', 'Recherche...')}>
                 <Ionicons name="search-outline" size={20} color={Colors.primary} />
               </TouchableOpacity>
-              <View style={styles.avatar} />
+              <Image 
+                source={require('../../assets/logo.jpeg')} 
+                style={styles.avatar} 
+              />
             </View>
           </View>
         </View>
@@ -41,13 +72,18 @@ export default function EventDetailsScreen({ navigation, route }: any) {
           <Text style={styles.title}>Future of Fintech:{'\n'}Togo 2026 Summit</Text>
 
           <View style={styles.organizerRow}>
-            <View style={styles.orgAvatar} />
+            <View style={styles.orgAvatar}>
+              <Image 
+                source={require('../../assets/logo.jpeg')} 
+                style={{ width: '100%', height: '100%', borderRadius: 99 }} 
+              />
+            </View>
             <View>
               <Text style={styles.organizedBy}>ORGANIZED BY</Text>
               <Text style={styles.orgName}>TogoTech Alliance</Text>
             </View>
-            <TouchableOpacity style={styles.followBtn}>
-              <Text style={styles.followText}>Follow</Text>
+            <TouchableOpacity style={styles.followBtn} onPress={() => Alert.alert('Suivre', 'Vous suivez maintenant cet organisateur !')}>
+              <Text style={styles.followText}>Suivre</Text>
             </TouchableOpacity>
           </View>
 
@@ -61,15 +97,32 @@ export default function EventDetailsScreen({ navigation, route }: any) {
             </View>
             <View style={styles.divider} />
             <View style={styles.infoRow}>
-              <View style={styles.infoIcon}><Ionicons name="location-outline" size={20} color={Colors.primary} /></View>
+              <View style={styles.infoIcon}>
+                <Ionicons 
+                  name={participationMode === 'online' ? "videocam-outline" : "location-outline"} 
+                  size={20} 
+                  color={Colors.primary} 
+                />
+              </View>
               <View>
-                <Text style={styles.infoTitle}>Palais des Congrès de Lomé</Text>
-                <Text style={styles.infoSub}>Lomé, Togo</Text>
+                <Text style={styles.infoTitle}>
+                  {participationMode === 'online' ? 'Événement en Ligne' : 'Palais des Congrès de Lomé'}
+                </Text>
+                <Text style={styles.infoSub}>
+                  {participationMode === 'online' ? 'Zoom / Google Meet' : 'Lomé, Togo'}
+                </Text>
               </View>
             </View>
-            <View style={styles.mapBox}>
-              <Ionicons name="map-outline" size={32} color={Colors.textMuted} />
-            </View>
+            <TouchableOpacity 
+              style={styles.mapBox} 
+              onPress={() => Alert.alert('Action', participationMode === 'online' ? 'Ouverture du lien de réunion...' : 'Ouverture de Google Maps...')}
+            >
+              <Ionicons 
+                name={participationMode === 'online' ? "link-outline" : "map-outline"} 
+                size={32} 
+                color={Colors.textMuted} 
+              />
+            </TouchableOpacity>
           </View>
 
           <Text style={styles.sectionTitle}>About Event</Text>
@@ -105,11 +158,13 @@ export default function EventDetailsScreen({ navigation, route }: any) {
       </ScrollView>
 
       <View style={styles.bottomBar}>
-        <TouchableOpacity style={styles.bookmarkBtn}>
+        <TouchableOpacity style={styles.bookmarkBtn} onPress={() => Alert.alert('Favoris', 'Événement ajouté à vos favoris !')}>
           <Ionicons name="bookmark-outline" size={22} color={Colors.textPrimary} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.registerBtn}>
-          <Text style={styles.registerText}>Register Now</Text>
+        <TouchableOpacity style={styles.registerBtn} onPress={handleRegister}>
+          <Text style={styles.registerText}>
+            {isExternal ? "S'inscrire (Externe)" : "S'inscrire Maintenant"}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>

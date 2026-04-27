@@ -1,6 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Shadows } from '../theme';
 
@@ -11,16 +11,34 @@ import ProfileScreen from '../screens/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 
-export default function MainTabNavigator() {
+export default function MainTabNavigator({ route }: any) {
+  // Get userType from route params (passed from Sign In or Sign Up)
+  // Default to 'User' if not provided for safety
+  const userType = route.params?.userType || 'User';
+  const isOrganizer = userType === 'Organizer';
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarShowLabel: true,
-        tabBarLabelStyle: { fontSize: 10, fontWeight: '600', marginBottom: 4 },
         tabBarStyle: styles.tabBar,
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: '#aab',
+        tabBarLabel: ({ focused, color }) => {
+          if (focused) return null; // Mask label when active
+          
+          let label = route.name;
+          if (route.name === 'Alerts') label = 'ALERTS';
+          else if (route.name === 'Home') label = 'HOME';
+          else if (route.name === 'Dashboard') label = 'DASHBOARD';
+          else if (route.name === 'Profile') label = 'PROFILE';
+          
+          return (
+            <View style={{ marginBottom: 4 }}>
+              <Text style={{ fontSize: 10, fontWeight: '600', color }}>{label}</Text>
+            </View>
+          );
+        },
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: any = 'home-outline';
           if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
@@ -39,10 +57,15 @@ export default function MainTabNavigator() {
         },
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'HOME' }} />
-      <Tab.Screen name="Dashboard" component={DashboardScreen} options={{ tabBarLabel: 'DASHBOARD' }} />
-      <Tab.Screen name="Alerts" component={NotificationsScreen} options={{ tabBarLabel: 'ALERTS' }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'PROFILE' }} />
+      <Tab.Screen name="Home" component={HomeScreen} />
+      
+      {/* Conditionally render Dashboard only for Organizers */}
+      {isOrganizer && (
+        <Tab.Screen name="Dashboard" component={DashboardScreen} />
+      )}
+      
+      <Tab.Screen name="Alerts" component={NotificationsScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
 }
@@ -58,7 +81,11 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     ...Shadows.card,
-    shadowOpacity: 0.12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 10,
   },
   activeIconWrapper: {
     width: 48,

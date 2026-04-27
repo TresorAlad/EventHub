@@ -8,6 +8,7 @@ import {
   StatusBar,
   TextInput,
   Image,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows, Fonts } from '../theme';
@@ -66,8 +67,10 @@ const UPCOMING = [
   },
 ];
 
-export default function HomeScreen({ navigation }: any) {
+export default function HomeScreen({ navigation, route }: any) {
   const [activeCategory, setActiveCategory] = useState('Hackathon');
+  const userType = route.params?.userType || 'User';
+  const isOrganizer = userType === 'Organizer';
 
   return (
     <View style={styles.container}>
@@ -77,17 +80,20 @@ export default function HomeScreen({ navigation }: any) {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <View style={styles.avatar} />
+            <Image 
+               source={require('../../assets/logo.jpeg')} 
+               style={styles.avatar} 
+            />
             <Text style={styles.appName}>EventHub</Text>
           </View>
-          <TouchableOpacity style={styles.searchIcon}>
+          <TouchableOpacity style={styles.searchIcon} onPress={() => Alert.alert('Search', 'Ouverture de la recherche...')}>
             <Ionicons name="search-outline" size={22} color={Colors.primary} />
           </TouchableOpacity>
         </View>
 
         {/* Hero greeting */}
         <View style={styles.hero}>
-          <Text style={styles.heroTitle}>Bonjour, Kodjo 👋{'\n'}Découvrons les{'\n'}événements du jour</Text>
+          <Text style={styles.heroTitle}>Bonjour, {isOrganizer ? 'Organisateur' : 'Kodjo'} 👋{'\n'}Découvrons les{'\n'}événements du jour</Text>
         </View>
 
         {/* Search bar */}
@@ -98,7 +104,7 @@ export default function HomeScreen({ navigation }: any) {
             placeholder="Rechercher des hackathons, pitchs..."
             placeholderTextColor={Colors.textMuted}
           />
-          <TouchableOpacity style={styles.filterBtn}>
+          <TouchableOpacity style={styles.filterBtn} onPress={() => Alert.alert('Filtres', 'Ouverture des filtres...')}>
             <Ionicons name="options-outline" size={20} color={Colors.white} />
           </TouchableOpacity>
         </View>
@@ -160,14 +166,16 @@ export default function HomeScreen({ navigation }: any) {
         </View>
       </ScrollView>
 
-      {/* FAB */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => navigation.navigate('CreateEvent')}
-        activeOpacity={0.88}
-      >
-        <Ionicons name="add" size={28} color={Colors.white} />
-      </TouchableOpacity>
+      {/* FAB - Only for organizers */}
+      {isOrganizer && (
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => navigation.navigate('CreateEvent')}
+          activeOpacity={0.88}
+        >
+          <Ionicons name="add" size={28} color={Colors.white} />
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
