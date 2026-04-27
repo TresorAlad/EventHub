@@ -9,6 +9,8 @@ import {
   StatusBar,
   KeyboardAvoidingView,
   Platform,
+  TextInput,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
@@ -17,6 +19,15 @@ export default function SignInScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPwd, setShowPwd] = useState(false);
+
+  const handleSignIn = () => {
+    if (!email || !password) {
+      Alert.alert('Erreur', 'Veuillez remplir tous les champs.');
+      return;
+    }
+    // In a real app, logic here. For now, navigate.
+    navigation.replace('Main');
+  };
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -43,9 +54,14 @@ export default function SignInScreen({ navigation }: any) {
             <Text style={styles.label}>Email Address</Text>
             <View style={styles.inputBox}>
               <Ionicons name="at-outline" size={20} color={Colors.textMuted} />
-              <Text style={[styles.inputText, !email && styles.placeholder]}>
-                {email || 'name@company.tg'}
-              </Text>
+              <TextInput 
+                style={styles.inputText} 
+                placeholder="name@company.tg"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
             </View>
           </View>
 
@@ -59,14 +75,23 @@ export default function SignInScreen({ navigation }: any) {
             </View>
             <View style={styles.inputBox}>
               <Ionicons name="lock-closed-outline" size={20} color={Colors.textMuted} />
-              <Text style={styles.inputText}>{'•'.repeat(8)}</Text>
+              <TextInput 
+                style={styles.inputText} 
+                placeholder="********"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPwd}
+              />
+              <TouchableOpacity onPress={() => setShowPwd(!showPwd)}>
+                <Ionicons name={showPwd ? "eye-off-outline" : "eye-outline"} size={20} color={Colors.textMuted} />
+              </TouchableOpacity>
             </View>
           </View>
 
           {/* Sign In Button */}
           <TouchableOpacity
             style={styles.signInBtn}
-            onPress={() => navigation.replace('Main')}
+            onPress={handleSignIn}
             activeOpacity={0.88}
           >
             <Text style={styles.signInText}>Sign In →</Text>

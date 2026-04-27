@@ -8,12 +8,16 @@ import SignUpScreen from '../screens/SignUpScreen';
 import EventDetailsScreen from '../screens/EventDetailsScreen';
 import CreateEventScreen from '../screens/CreateEventScreen';
 import MainTabNavigator from './MainTabNavigator';
+import EditProfileScreen from '../screens/EditProfileScreen';
+import SearchScreen from '../screens/SearchScreen';
+import FilterScreen from '../screens/FilterScreen';
+import PrivacySecurityScreen from '../screens/PrivacySecurityScreen';
 
 const Stack = createStackNavigator();
 
 export default function RootNavigator() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false, animationEnabled: true }}>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Splash" component={SplashScreen} />
       <Stack.Screen name="Onboarding" component={OnboardingScreen} />
       <Stack.Screen name="SignIn" component={SignInScreen} />
@@ -29,6 +33,14 @@ export default function RootNavigator() {
         component={CreateEventScreen}
         options={{ presentation: 'modal' }}
       />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+      <Stack.Screen name="Search" component={SearchScreen} />
+      <Stack.Screen
+        name="Filter"
+        component={FilterScreen}
+        options={{ presentation: 'modal' }}
+      />
+      <Stack.Screen name="PrivacySecurity" component={PrivacySecurityScreen} />
     </Stack.Navigator>
   );
 }

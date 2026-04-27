@@ -1,6 +1,7 @@
+import React from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, Image, StatusBar, Alert,
+  TouchableOpacity, Image, StatusBar, Alert, Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
@@ -23,7 +24,7 @@ export default function EventDetailsScreen({ navigation, route }: any) {
         'Cet événement est géré sur une plateforme externe. Vous allez être redirigé vers le site partenaire.',
         [
           { text: 'Annuler', style: 'cancel' },
-          { text: 'Continuer', onPress: () => Alert.alert('Navigateur', `Redirection vers : ${registrationLink}`) }
+          { text: 'Continuer', onPress: () => Linking.openURL(registrationLink).catch(() => Alert.alert('Erreur', "Impossible d'ouvrir le lien.")) }
         ]
       );
     } else {
@@ -32,7 +33,7 @@ export default function EventDetailsScreen({ navigation, route }: any) {
         'Voulez-vous valider votre participation automatiquement avec les informations de votre profil ?',
         [
           { text: 'Annuler', style: 'cancel' },
-          { text: 'Confirmer', onPress: () => Alert.alert('Succès', 'Votre inscription a été validée avec succès dans l\'application !') }
+          { text: 'Confirmer', onPress: () => Alert.alert('Succès', "Votre inscription a été validée avec succès dans l'application !") }
         ]
       );
     }
@@ -51,10 +52,10 @@ export default function EventDetailsScreen({ navigation, route }: any) {
             </TouchableOpacity>
             <Text style={styles.topTitle}>EventHub</Text>
             <View style={styles.topRight}>
-              <TouchableOpacity style={styles.iconBtn} onPress={() => Alert.alert('Partager', 'Lien de l\'événement copié !')}>
+              <TouchableOpacity style={styles.iconBtn} onPress={() => Alert.alert('Partager', "Lien de l'événement copié !")}>
                 <Ionicons name="share-social-outline" size={20} color={Colors.primary} />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.iconBtn} onPress={() => Alert.alert('Search', 'Recherche...')}>
+              <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Search')}>
                 <Ionicons name="search-outline" size={20} color={Colors.primary} />
               </TouchableOpacity>
               <Image 
@@ -115,7 +116,14 @@ export default function EventDetailsScreen({ navigation, route }: any) {
             </View>
             <TouchableOpacity 
               style={styles.mapBox} 
-              onPress={() => Alert.alert('Action', participationMode === 'online' ? 'Ouverture du lien de réunion...' : 'Ouverture de Google Maps...')}
+              onPress={() => {
+                if (participationMode === 'online') {
+                  Linking.openURL('https://meet.google.com').catch(() => Alert.alert('Erreur', "Impossible d'ouvrir le lien de réunion."));
+                } else {
+                  const query = encodeURIComponent('Palais des Congrès de Lomé, Togo');
+                  Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${query}`).catch(() => Alert.alert('Erreur', "Impossible d'ouvrir Google Maps."));
+                }
+              }}
             >
               <Ionicons 
                 name={participationMode === 'online' ? "link-outline" : "map-outline"} 

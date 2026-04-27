@@ -86,7 +86,7 @@ export default function HomeScreen({ navigation, route }: any) {
             />
             <Text style={styles.appName}>EventHub</Text>
           </View>
-          <TouchableOpacity style={styles.searchIcon} onPress={() => Alert.alert('Search', 'Ouverture de la recherche...')}>
+          <TouchableOpacity style={styles.searchIcon} onPress={() => navigation.navigate('Search')}>
             <Ionicons name="search-outline" size={22} color={Colors.primary} />
           </TouchableOpacity>
         </View>
@@ -104,7 +104,7 @@ export default function HomeScreen({ navigation, route }: any) {
             placeholder="Rechercher des hackathons, pitchs..."
             placeholderTextColor={Colors.textMuted}
           />
-          <TouchableOpacity style={styles.filterBtn} onPress={() => Alert.alert('Filtres', 'Ouverture des filtres...')}>
+          <TouchableOpacity style={styles.filterBtn} onPress={() => navigation.navigate('Filter')}>
             <Ionicons name="options-outline" size={20} color={Colors.white} />
           </TouchableOpacity>
         </View>
@@ -128,7 +128,7 @@ export default function HomeScreen({ navigation, route }: any) {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>En Tendance</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('Search')}>
               <Text style={styles.seeAll}>Voir tout</Text>
             </TouchableOpacity>
           </View>

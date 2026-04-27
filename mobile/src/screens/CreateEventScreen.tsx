@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, TextInput, StatusBar, Image,
+  TouchableOpacity, TextInput, StatusBar, Image, Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
@@ -16,6 +16,16 @@ export default function CreateEventScreen({ navigation }: any) {
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
   const [showCatPicker, setShowCatPicker] = useState(false);
+
+  const handlePublish = () => {
+    if (!title || !date || !location) {
+      Alert.alert('Champs manquants', "S'il vous plaît, remplissez au moins le titre, la date et le lieu.");
+      return;
+    }
+    Alert.alert('Félicitations !', 'Votre événement a été créé avec succès et est en attente de validation.', [
+      { text: 'OK', onPress: () => navigation.goBack() }
+    ]);
+  };
 
   // New logic fields
   const [isExternal, setIsExternal] = useState(false);
@@ -178,7 +188,7 @@ export default function CreateEventScreen({ navigation }: any) {
         </View>
 
         {/* Publish Button */}
-        <TouchableOpacity style={styles.publishBtn} activeOpacity={0.88}>
+        <TouchableOpacity style={styles.publishBtn} activeOpacity={0.88} onPress={handlePublish}>
           <Ionicons name="send" size={18} color={Colors.white} />
           <Text style={styles.publishText}>Publish Event</Text>
         </TouchableOpacity>

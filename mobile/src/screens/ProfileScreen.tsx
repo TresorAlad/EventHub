@@ -14,8 +14,16 @@ const SETTINGS = [
 export default function ProfileScreen({ navigation, route }: any) {
   const userType = route.params?.userType || 'User';
 
-  const handleSettingPress = (label: string) => {
-    Alert.alert(label, `Cette fonctionnalité "${label}" sera bientôt disponible.`);
+  const handleSettingPress = (id: string, label: string) => {
+    if (id === 'edit') {
+      navigation.navigate('EditProfile');
+    } else if (id === 'notif') {
+      navigation.navigate('Alerts');
+    } else if (id === 'privacy') {
+      navigation.navigate('PrivacySecurity');
+    } else {
+      Alert.alert(label, `Cette fonctionnalité "${label}" sera bientôt disponible.`);
+    }
   };
 
   return (
@@ -26,7 +34,7 @@ export default function ProfileScreen({ navigation, route }: any) {
         <View style={styles.header}>
           <Text style={styles.appName}>EventHub</Text>
           <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.iconBtn} onPress={() => handleSettingPress('Search')}>
+            <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Search')}>
               <Ionicons name="search-outline" size={22} color={Colors.primary} />
             </TouchableOpacity>
             <Image 
@@ -71,7 +79,7 @@ export default function ProfileScreen({ navigation, route }: any) {
               key={i} 
               style={[styles.settingRow, i < SETTINGS.length - 1 && styles.settingBorder]} 
               activeOpacity={0.7}
-              onPress={() => handleSettingPress(s.label)}
+              onPress={() => handleSettingPress(s.id, s.label)}
             >
               <View style={styles.settingIcon}>
                 <Ionicons name={s.icon as any} size={20} color={Colors.primary} />

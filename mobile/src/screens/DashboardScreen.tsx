@@ -28,7 +28,7 @@ export default function DashboardScreen({ navigation }: any) {
             style={styles.avatar} 
           />
           <Text style={styles.appName}>EventHub</Text>
-          <TouchableOpacity style={styles.searchIcon} onPress={() => Alert.alert('Search', 'Recherche en cours...')}>
+          <TouchableOpacity style={styles.searchIcon} onPress={() => navigation.navigate('Search')}>
             <Ionicons name="search-outline" size={22} color={Colors.primary} />
           </TouchableOpacity>
         </View>
@@ -84,7 +84,7 @@ export default function DashboardScreen({ navigation }: any) {
         {/* Events list */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Your Events</Text>
-          <TouchableOpacity><Text style={styles.seeAll}>See All</Text></TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Search')}><Text style={styles.seeAll}>See All</Text></TouchableOpacity>
         </View>
 
         {MY_EVENTS.map((ev, i) => (

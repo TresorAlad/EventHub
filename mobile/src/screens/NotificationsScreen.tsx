@@ -52,7 +52,7 @@ const NOTIFS_NEW = [
   },
 ];
 
-export default function NotificationsScreen() {
+export default function NotificationsScreen({ navigation }: any) {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
@@ -61,7 +61,7 @@ export default function NotificationsScreen() {
         <View style={styles.header}>
           <View style={styles.avatar} />
           <Text style={styles.appName}>EventHub</Text>
-          <TouchableOpacity style={styles.searchIcon}>
+          <TouchableOpacity style={styles.searchIcon} onPress={() => navigation.navigate('Search')}>
             <Ionicons name="search-outline" size={22} color={Colors.primary} />
           </TouchableOpacity>
         </View>
