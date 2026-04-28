@@ -13,9 +13,9 @@ const SPEAKERS = [
 
 export default function EventDetailsScreen({ navigation, route }: any) {
   const event = route.params?.event || {};
-  const isExternal = event.isExternal || false;
-  const registrationLink = event.registrationLink || 'https://external-platform.com';
-  const participationMode = event.mode || 'in-person'; // 'online' or 'in-person'
+  const isExternal = event.registrationMode === 'External';
+  const registrationLink = event.externalLink || 'https://external-platform.com';
+  const participationMode = event.participationMode || 'InPlace'; // 'Online' or 'InPlace'
 
   const handleRegister = () => {
     if (isExternal) {
@@ -100,24 +100,24 @@ export default function EventDetailsScreen({ navigation, route }: any) {
             <View style={styles.infoRow}>
               <View style={styles.infoIcon}>
                 <Ionicons 
-                  name={participationMode === 'online' ? "videocam-outline" : "location-outline"} 
+                  name={participationMode === 'Online' ? "videocam-outline" : "location-outline"} 
                   size={20} 
                   color={Colors.primary} 
                 />
               </View>
               <View>
                 <Text style={styles.infoTitle}>
-                  {participationMode === 'online' ? 'Événement en Ligne' : 'Palais des Congrès de Lomé'}
+                  {participationMode === 'Online' ? 'Événement en Ligne' : 'Palais des Congrès de Lomé'}
                 </Text>
                 <Text style={styles.infoSub}>
-                  {participationMode === 'online' ? 'Zoom / Google Meet' : 'Lomé, Togo'}
+                  {participationMode === 'Online' ? 'Zoom / Google Meet' : 'Lomé, Togo'}
                 </Text>
               </View>
             </View>
             <TouchableOpacity 
               style={styles.mapBox} 
               onPress={() => {
-                if (participationMode === 'online') {
+                if (participationMode === 'Online') {
                   Linking.openURL('https://meet.google.com').catch(() => Alert.alert('Erreur', "Impossible d'ouvrir le lien de réunion."));
                 } else {
                   const query = encodeURIComponent('Palais des Congrès de Lomé, Togo');
@@ -126,7 +126,7 @@ export default function EventDetailsScreen({ navigation, route }: any) {
               }}
             >
               <Ionicons 
-                name={participationMode === 'online' ? "link-outline" : "map-outline"} 
+                name={participationMode === 'Online' ? "link-outline" : "map-outline"} 
                 size={32} 
                 color={Colors.textMuted} 
               />
