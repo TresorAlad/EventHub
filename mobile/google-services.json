@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "573518128565",
+    "project_id": "eventhub-4e196",
+    "storage_bucket": "eventhub-4e196.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:573518128565:android:446ec487ea74adfb9465fc",
+        "android_client_info": {
+          "package_name": "com.eventhub.togo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8diuE9DafkW2Q8yGelyVbuOdQ_vxQ0Vg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

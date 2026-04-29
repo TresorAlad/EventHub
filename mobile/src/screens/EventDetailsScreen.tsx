@@ -5,17 +5,22 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
-
-const SPEAKERS = [
-  { name: 'Amivi Koffi', role: 'CTO, FinGo', image: require('../../assets/onboarding1.png') },
-  { name: 'Koffi Mensah', role: 'VC Partner', image: require('../../assets/onboarding1.png') },
-];
+import { useAuth } from '../hooks/useAuth';
 
 export default function EventDetailsScreen({ navigation, route }: any) {
+  const { dbUser, user } = useAuth();
   const event = route.params?.event || {};
-  const isExternal = event.registrationMode === 'External';
+  
+  const isExternal = event.registrationMode === 'External' || event.externalLink;
   const registrationLink = event.externalLink || 'https://external-platform.com';
-  const participationMode = event.participationMode || 'InPlace'; // 'Online' or 'InPlace'
+  const participationMode = event.participationMode || 'InPlace'; 
+
+  const isOrganizer = dbUser?.id === event.organizerId || event.organizer?.id === dbUser?.id || false;
+
+  const bannerImage = event.imageUrl ? { uri: event.imageUrl } : require('../../assets/onboarding1.png');
+  const orgName = event.organizer?.name || event.organizer || 'Communauté Tech';
+  const orgAvatar = event.organizer?.avatar ? { uri: event.organizer.avatar } : require('../../assets/logo.jpeg');
+  const eventDate = event.date ? new Date(event.date) : new Date();
 
   const handleRegister = () => {
     if (isExternal) {
@@ -44,7 +49,7 @@ export default function EventDetailsScreen({ navigation, route }: any) {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         {/* Cover */}
         <View style={styles.coverContainer}>
-          <Image source={require('../../assets/onboarding1.png')} style={styles.cover} resizeMode="cover" />
+          <Image source={bannerImage} style={styles.cover} resizeMode="cover" />
           <View style={styles.coverOverlay} />
           <View style={styles.topBar}>
             <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
@@ -68,65 +73,65 @@ export default function EventDetailsScreen({ navigation, route }: any) {
 
         <View style={styles.content}>
           <View style={styles.tag}>
-            <Text style={styles.tagText}>AI & INNOVATION</Text>
+            <Text style={styles.tagText}>{event.category ? event.category.toUpperCase() : 'TECH EVENT'}</Text>
           </View>
-          <Text style={styles.title}>Future of Fintech:{'\n'}Togo 2026 Summit</Text>
+          <Text style={styles.title}>{event.title || 'Tech Event'}</Text>
 
           <View style={styles.organizerRow}>
             <View style={styles.orgAvatar}>
-              <Image 
-                source={require('../../assets/logo.jpeg')} 
-                style={{ width: '100%', height: '100%', borderRadius: 99 }} 
-              />
+              <Image source={orgAvatar} style={{ width: '100%', height: '100%', borderRadius: 99 }} />
             </View>
             <View>
               <Text style={styles.organizedBy}>ORGANIZED BY</Text>
-              <Text style={styles.orgName}>TogoTech Alliance</Text>
+              <Text style={styles.orgName}>{orgName}</Text>
             </View>
-            <TouchableOpacity style={styles.followBtn} onPress={() => Alert.alert('Suivre', 'Vous suivez maintenant cet organisateur !')}>
-              <Text style={styles.followText}>Suivre</Text>
-            </TouchableOpacity>
+            {!isOrganizer && (
+              <TouchableOpacity style={styles.followBtn} onPress={() => Alert.alert('Suivre', 'Vous suivez maintenant cet organisateur !')}>
+                <Text style={styles.followText}>Suivre</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
               <View style={styles.infoIcon}><Ionicons name="calendar-outline" size={20} color={Colors.primary} /></View>
               <View>
-                <Text style={styles.infoTitle}>October 24, 2026</Text>
-                <Text style={styles.infoSub}>09:00 AM - 05:00 PM GMT</Text>
+                <Text style={styles.infoTitle}>{eventDate.toLocaleDateString()}</Text>
+                <Text style={styles.infoSub}>{eventDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} GMT</Text>
               </View>
             </View>
             <View style={styles.divider} />
             <View style={styles.infoRow}>
               <View style={styles.infoIcon}>
                 <Ionicons 
-                  name={participationMode === 'Online' ? "videocam-outline" : "location-outline"} 
+                  name={participationMode === 'Online' || participationMode === 'online' ? "videocam-outline" : "location-outline"} 
                   size={20} 
                   color={Colors.primary} 
                 />
               </View>
               <View>
                 <Text style={styles.infoTitle}>
-                  {participationMode === 'Online' ? 'Événement en Ligne' : 'Palais des Congrès de Lomé'}
+                  {participationMode === 'Online' || participationMode === 'online' ? 'Événement en Ligne' : 'Présentiel'}
                 </Text>
                 <Text style={styles.infoSub}>
-                  {participationMode === 'Online' ? 'Zoom / Google Meet' : 'Lomé, Togo'}
+                  {event.location || 'Location TBA'}
                 </Text>
               </View>
             </View>
             <TouchableOpacity 
               style={styles.mapBox} 
               onPress={() => {
-                if (participationMode === 'Online') {
-                  Linking.openURL('https://meet.google.com').catch(() => Alert.alert('Erreur', "Impossible d'ouvrir le lien de réunion."));
+                if (participationMode === 'Online' || participationMode === 'online') {
+                  const link = event.location?.startsWith('http') ? event.location : 'https://meet.google.com';
+                  Linking.openURL(link).catch(() => Alert.alert('Erreur', "Impossible d'ouvrir le lien de réunion."));
                 } else {
-                  const query = encodeURIComponent('Palais des Congrès de Lomé, Togo');
+                  const query = encodeURIComponent(event.location || 'Lomé, Togo');
                   Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${query}`).catch(() => Alert.alert('Erreur', "Impossible d'ouvrir Google Maps."));
                 }
               }}
             >
               <Ionicons 
-                name={participationMode === 'Online' ? "link-outline" : "map-outline"} 
+                name={participationMode === 'Online' || participationMode === 'online' ? "link-outline" : "map-outline"} 
                 size={32} 
                 color={Colors.textMuted} 
               />
@@ -135,7 +140,7 @@ export default function EventDetailsScreen({ navigation, route }: any) {
 
           <Text style={styles.sectionTitle}>About Event</Text>
           <Text style={styles.description}>
-            Join the most influential minds in West African technology for a day of deep-dive discussions on digital finance, blockchain integration, and the future of cross-border payments in Togo.
+             {event.description || "Rejoignez ce superbe événement pour découvrir et partager autour des technologies."}
           </Text>
 
           <View style={styles.sectionHeader}>
@@ -169,11 +174,21 @@ export default function EventDetailsScreen({ navigation, route }: any) {
         <TouchableOpacity style={styles.bookmarkBtn} onPress={() => Alert.alert('Favoris', 'Événement ajouté à vos favoris !')}>
           <Ionicons name="bookmark-outline" size={22} color={Colors.textPrimary} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.registerBtn} onPress={handleRegister}>
-          <Text style={styles.registerText}>
-            {isExternal ? "S'inscrire (Externe)" : "S'inscrire Maintenant"}
-          </Text>
-        </TouchableOpacity>
+        
+        {isOrganizer ? (
+          <TouchableOpacity 
+            style={[styles.registerBtn, { backgroundColor: '#10b981', flexDirection: 'row', justifyContent: 'center', gap: 8 }]} 
+            onPress={() => Alert.alert('Gestion des Inscrits', `🌟 Super ! Vous avez actuellement ${event.attendees || 0} participants inscrits.\n\nLe dashboard de tracking sera disponible dans la prochaine mise à jour pour exporter la liste.`, [{text:'Génial'}])}>
+            <Ionicons name="people" size={20} color="#fff" />
+            <Text style={styles.registerText}>Suivre les inscrits ({event.attendees || 0})</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={styles.registerBtn} onPress={handleRegister}>
+            <Text style={styles.registerText}>
+              {isExternal ? "S'inscrire (Externe)" : "S'inscrire Maintenant"}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );

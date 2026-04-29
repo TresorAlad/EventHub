@@ -7,24 +7,36 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows, Fonts } from '../theme';
 
-const MOCK_RESULTS = [
-  { id: '1', title: 'Lomé Tech Summit 2026', date: 'Oct 12', location: 'Palais des Congrès', category: 'Tech' },
-  { id: '2', title: 'Festival des Arts de Lomé', date: 'Nov 05', location: 'Institut Français', category: 'Culture' },
-  { id: '3', title: 'Startup Weekend Togo', date: 'Sep 28', location: 'Bluezone Lomé', category: 'Business' },
-];
+import { getEvents } from '../services/api';
 
 export default function SearchScreen({ navigation }: any) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [results, setResults] = useState(MOCK_RESULTS);
+  const [allEvents, setAllEvents] = useState<any[]>([]);
+  const [results, setResults] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const data = await getEvents();
+      setAllEvents(data);
+      setResults(data);
+    } catch (error) {
+      console.error('Failed to fetch events on search screen', error);
+    }
+  };
 
   const handleSearch = (text: string) => {
     setSearchQuery(text);
     if (text.trim() === '') {
-      setResults(MOCK_RESULTS);
+      setResults(allEvents);
     } else {
-      const filtered = MOCK_RESULTS.filter(item => 
+      const filtered = allEvents.filter(item => 
         item.title.toLowerCase().includes(text.toLowerCase()) ||
-        item.category.toLowerCase().includes(text.toLowerCase())
+        (item.category && item.category.toLowerCase().includes(text.toLowerCase())) ||
+        (item.location && item.location.toLowerCase().includes(text.toLowerCase()))
       );
       setResults(filtered);
     }
@@ -40,7 +52,7 @@ export default function SearchScreen({ navigation }: any) {
           <Text style={styles.categoryText}>{item.category}</Text>
         </View>
         <Text style={styles.cardTitle}>{item.title}</Text>
-        <Text style={styles.cardMeta}>{item.date} • {item.location}</Text>
+        <Text style={styles.cardMeta}>{new Date(item.date).toLocaleDateString()} • {item.location || 'En Ligne'}</Text>
       </View>
       <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
     </TouchableOpacity>

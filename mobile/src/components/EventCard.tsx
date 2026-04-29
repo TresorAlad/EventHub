@@ -10,15 +10,23 @@ interface EventCardProps {
   location?: string;
   price?: string;
   image: any;
+  status?: string;
   onPress?: () => void;
 }
 
-export default function EventCard({ category, title, time, location, price, image, onPress }: EventCardProps) {
+export default function EventCard({ category, title, time, location, price, image, status, onPress }: EventCardProps) {
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.9}>
       <Image source={image} style={styles.image} />
       <View style={styles.info}>
-        <Text style={styles.category}>{category}</Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.category}>{category}</Text>
+          {status && (
+            <View style={[styles.statusBadge, status === 'Live' ? styles.statusLive : styles.statusUpcoming]}>
+              <Text style={styles.statusText}>{status === 'Live' ? 'LIVE' : 'À VENIR'}</Text>
+            </View>
+          )}
+        </View>
         <Text style={styles.title} numberOfLines={2}>{title}</Text>
         <View style={styles.meta}>
           <View style={styles.metaRow}>
@@ -95,5 +103,26 @@ const styles = StyleSheet.create({
   },
   free: {
     color: Colors.success,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  statusBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  statusLive: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+  },
+  statusUpcoming: {
+    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+  },
+  statusText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#38bdf8',
   },
 });

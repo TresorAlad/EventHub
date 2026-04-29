@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,68 +9,45 @@ import {
   TextInput,
   Image,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows, Fonts } from '../theme';
 import CategoryChip from '../components/CategoryChip';
 import TrendingCard from '../components/TrendingCard';
 import EventCard from '../components/EventCard';
+import { getEvents } from '../services/api';
+import { useAuth } from '../hooks/useAuth';
 
 const CATEGORIES = ['Hackathon', 'Meetup', 'Workshop', 'Conférence', 'Pitch'];
 
-const TRENDING = [
-  {
-    id: '1',
-    category: 'HACKATHON',
-    title: 'Togo AI Summit 2026',
-    subtitle: 'LOME • SUMMIT',
-    date: '12 Oct',
-    time: '09:00',
-    image: require('../../assets/onboarding1.png'),
-  },
-  {
-    id: '2',
-    category: 'STARTUP',
-    title: 'Lomé Startup Weekend',
-    subtitle: 'LOME',
-    date: '18 Oct',
-    time: '08:00',
-    image: require('../../assets/onboarding1.png'),
-  },
-];
+// Real data is now fetched from the backend
 
-const UPCOMING = [
-  {
-    id: '1',
-    category: 'WORKSHOP',
-    title: 'Fullstack React Masterclass',
-    time: 'Demain, 14:00',
-    price: 'Gratuit',
-    image: require('../../assets/onboarding1.png'),
-  },
-  {
-    id: '2',
-    category: 'MEETUP',
-    title: 'Fintech Trends 2026',
-    location: 'Hotel du 2 Février',
-    time: 'Ven, 18:00',
-    price: '5.000 FCFA',
-    image: require('../../assets/onboarding1.png'),
-  },
-  {
-    id: '3',
-    category: 'CONFÉRENCE',
-    title: 'Women in Tech Togo',
-    time: 'Sam, 09:00',
-    price: 'Gratuit',
-    image: require('../../assets/onboarding1.png'),
-  },
-];
-
-export default function HomeScreen({ navigation, route }: any) {
+export default function HomeScreen({ navigation }: any) {
   const [activeCategory, setActiveCategory] = useState('Hackathon');
-  const userType = route.params?.userType || 'User';
-  const isOrganizer = userType === 'Organizer';
+  const { dbUser } = useAuth();
+  const isOrganizer = dbUser?.role === 'ORGANIZER' || dbUser?.role === 'ADMIN';
+
+  const [events, setEvents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const data = await getEvents();
+      setEvents(data);
+    } catch (error) {
+      console.error('Failed to fetch events', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const trendingEvents = events.slice(0, 3);
+  const upcomingEvents = events.slice(3, 10);
 
   return (
     <View style={styles.container}>
@@ -93,7 +70,9 @@ export default function HomeScreen({ navigation, route }: any) {
 
         {/* Hero greeting */}
         <View style={styles.hero}>
-          <Text style={styles.heroTitle}>Bonjour, {isOrganizer ? 'Organisateur' : 'Kodjo'} 👋{'\n'}Découvrons les{'\n'}événements du jour</Text>
+          <Text style={styles.heroTitle}>
+            Bonjour, {dbUser?.name || 'Explorateur'} 👋{'\n'}Découvrons les{'\n'}événements du jour
+          </Text>
         </View>
 
         {/* Search bar */}
@@ -124,46 +103,82 @@ export default function HomeScreen({ navigation, route }: any) {
           </ScrollView>
         </View>
 
-        {/* Trending */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>En Tendance</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Search')}>
-              <Text style={styles.seeAll}>Voir tout</Text>
-            </TouchableOpacity>
-          </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {TRENDING.map((item) => (
-              <TrendingCard
-                key={item.id}
-                category={item.category}
-                title={item.title}
-                subtitle={item.subtitle}
-                date={item.date}
-                time={item.time}
-                image={item.image}
-                onPress={() => navigation.navigate('EventDetails', { event: item })}
-              />
-            ))}
-          </ScrollView>
-        </View>
+        {loading ? (
+           <View style={{ padding: 20, alignItems: 'center' }}>
+             <ActivityIndicator size="large" color={Colors.primary} />
+           </View>
+        ) : (
+          <>
+            {/* Trending */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>En Tendance</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Search')}>
+                  <Text style={styles.seeAll}>Voir tout</Text>
+                </TouchableOpacity>
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {trendingEvents.length > 0 ? trendingEvents.map((item) => {
+                  const now = new Date();
+                  const start = new Date(item.date);
+                  const end = item.endDate ? new Date(item.endDate) : null;
+                  let status = 'Upcoming';
+                  if (now >= start) {
+                    if (!end || now <= end) status = 'Live';
+                    else status = 'Past';
+                  }
 
-        {/* Upcoming */}
-        <View style={[styles.section, { paddingBottom: 100 }]}>
-          <Text style={styles.sectionTitle}>Événements à Venir</Text>
-          {UPCOMING.map((item) => (
-            <EventCard
-              key={item.id}
-              category={item.category}
-              title={item.title}
-              time={item.time}
-              location={item.location}
-              price={item.price}
-              image={item.image}
-              onPress={() => navigation.navigate('EventDetails', { event: item })}
-            />
-          ))}
-        </View>
+                  return (
+                    <TrendingCard
+                      key={item.id}
+                      category={item.category || 'Tech'}
+                      title={item.title}
+                      subtitle={item.location || 'Lomé'}
+                      date={new Date(item.date).toLocaleDateString([], { day: '2-digit', month: 'short' })}
+                      time={new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      image={item.imageUrl ? { uri: item.imageUrl } : require('../../assets/onboarding1.png')}
+                      status={status}
+                      onPress={() => navigation.navigate('EventDetails', { event: item })}
+                    />
+                  );
+                }) : (
+                  <Text style={{color: Colors.textMuted}}>Aucun événement en tendance</Text>
+                )}
+              </ScrollView>
+            </View>
+
+            {/* Upcoming */}
+            <View style={[styles.section, { paddingBottom: 100 }]}>
+              <Text style={styles.sectionTitle}>Événements à Venir</Text>
+                {upcomingEvents.length > 0 ? upcomingEvents.map((item) => {
+                  const now = new Date();
+                  const start = new Date(item.date);
+                  const end = item.endDate ? new Date(item.endDate) : null;
+                  let status = 'Upcoming';
+                  if (now >= start) {
+                    if (!end || now <= end) status = 'Live';
+                    else status = 'Past';
+                  }
+
+                  return (
+                    <EventCard
+                      key={item.id}
+                      category={item.category || 'Tech'}
+                      title={item.title}
+                      location={item.location || 'Lomé'}
+                      time={new Date(item.date).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' })}
+                      price={item.price > 0 ? `${item.price} FCFA` : 'Gratuit'}
+                      image={item.imageUrl ? { uri: item.imageUrl } : require('../../assets/onboarding1.png')}
+                      status={status}
+                      onPress={() => navigation.navigate('EventDetails', { event: item })}
+                    />
+                  )
+                }) : (
+                  <Text style={{color: Colors.textMuted}}>Pas d'événements à venir</Text>
+                )}
+            </View>
+          </>
+        )}
       </ScrollView>
 
       {/* FAB - Only for organizers */}

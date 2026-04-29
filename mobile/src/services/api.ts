@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { auth } from '../config/firebase';
 
-const API_URL = 'http://localhost:5000/api'; // Change to your machine's IP if testing on real device
+const API_URL = 'http://12.12.12.129:5000/api'; // Corrected machine IP
 
 const api = axios.create({
   baseURL: API_URL,
@@ -38,11 +38,7 @@ export const getEvents = async () => {
 
 export const createEvent = async (eventData: FormData) => {
   try {
-    const response = await api.post('/events', eventData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const response = await api.post('/events', eventData);
     return response.data;
   } catch (error) {
     console.error('Error creating event:', error);

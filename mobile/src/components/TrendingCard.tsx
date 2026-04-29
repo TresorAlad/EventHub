@@ -10,17 +10,25 @@ interface TrendingCardProps {
   date: string;
   time?: string;
   image: any;
+  status?: string;
   onPress?: () => void;
 }
 
-export default function TrendingCard({ category, title, subtitle, date, time, image, onPress }: TrendingCardProps) {
+export default function TrendingCard({ category, title, subtitle, date, time, image, status, onPress }: TrendingCardProps) {
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.92}>
       <ImageBackground source={image} style={styles.image} imageStyle={styles.imageStyle}>
         <View style={styles.overlay} />
         <View style={styles.content}>
-          <View style={styles.tag}>
-            <Text style={styles.tagText}>{category}</Text>
+          <View style={styles.headerRow}>
+            <View style={styles.tag}>
+              <Text style={styles.tagText}>{category}</Text>
+            </View>
+            {status && (
+              <View style={[styles.statusBadge, status === 'Live' ? styles.statusLive : styles.statusUpcoming]}>
+                <Text style={styles.statusText}>{status === 'Live' ? 'LIVE' : 'À VENIR'}</Text>
+              </View>
+            )}
           </View>
           <View style={styles.bottom}>
             {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
@@ -59,7 +67,6 @@ const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.45)',
-    backgroundGradient: 'transparent',
   },
   content: {
     flex: 1,
@@ -107,5 +114,32 @@ const styles = StyleSheet.create({
   metaText: {
     fontSize: FontSize.sm,
     color: 'rgba(255,255,255,0.8)',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.full,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.4)',
+  },
+  statusLive: {
+    backgroundColor: 'rgba(239, 68, 68, 0.4)',
+    borderColor: 'rgba(239, 68, 68, 0.6)',
+  },
+  statusUpcoming: {
+    backgroundColor: 'rgba(56, 189, 248, 0.4)',
+    borderColor: 'rgba(56, 189, 248, 0.6)',
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: Colors.white,
+    letterSpacing: 0.5,
   },
 });
