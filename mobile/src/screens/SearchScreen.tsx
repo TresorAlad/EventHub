@@ -42,21 +42,43 @@ export default function SearchScreen({ navigation }: any) {
     }
   };
 
-  const renderItem = ({ item }: any) => (
-    <TouchableOpacity 
-      style={styles.card}
-      onPress={() => navigation.navigate('EventDetails', { eventId: item.id })}
-    >
-      <View style={styles.cardContent}>
-        <View style={styles.categoryBadge}>
-          <Text style={styles.categoryText}>{item.category}</Text>
+  const renderItem = ({ item }: any) => {
+    const now = new Date();
+    const start = new Date(item.date);
+    const end = item.endDate ? new Date(item.endDate) : null;
+    let status = 'Upcoming';
+    if (now >= start) {
+      if (!end || now <= end) status = 'Live';
+      else status = 'Past';
+    }
+
+    return (
+      <TouchableOpacity 
+        style={styles.card}
+        onPress={() => navigation.navigate('EventDetails', { event: item })}
+      >
+        <View style={styles.cardContent}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View style={styles.categoryBadge}>
+              <Text style={styles.categoryText}>{item.category || 'TECH'}</Text>
+            </View>
+            {status !== 'Past' && (
+              <View style={[styles.statusBadge, status === 'Live' ? styles.statusLive : styles.statusUpcoming]}>
+                <Text style={[styles.statusText, { color: status === 'Live' ? '#ef4444' : '#38bdf8' }]}>
+                  {status === 'Live' ? 'LIVE' : 'À VENIR'}
+                </Text>
+              </View>
+            )}
+          </View>
+          <Text style={styles.cardTitle}>{item.title}</Text>
+          <Text style={styles.cardMeta}>
+            {new Date(item.date).toLocaleDateString('fr-FR')} • {item.location || 'En Ligne'}
+          </Text>
         </View>
-        <Text style={styles.cardTitle}>{item.title}</Text>
-        <Text style={styles.cardMeta}>{new Date(item.date).toLocaleDateString()} • {item.location || 'En Ligne'}</Text>
-      </View>
-      <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
-    </TouchableOpacity>
-  );
+        <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -71,7 +93,7 @@ export default function SearchScreen({ navigation }: any) {
           <Ionicons name="search" size={20} color={Colors.textMuted} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search events, organizers..."
+            placeholder="Rechercher événements, organisateurs..."
             value={searchQuery}
             onChangeText={handleSearch}
             autoFocus
@@ -90,9 +112,9 @@ export default function SearchScreen({ navigation }: any) {
       <View style={styles.content}>
         <View style={styles.resultsHeader}>
           <Text style={styles.resultsTitle}>
-            {searchQuery === '' ? 'Popular Searches' : `Results for "${searchQuery}"`}
+            {searchQuery === '' ? 'Recherches Populaires' : `Résultats pour "${searchQuery}"`}
           </Text>
-          <Text style={styles.resultsCount}>{results.length} found</Text>
+          <Text style={styles.resultsCount}>{results.length} trouvé{results.length > 1 ? 's' : ''}</Text>
         </View>
 
         <FlatList
@@ -104,7 +126,7 @@ export default function SearchScreen({ navigation }: any) {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Ionicons name="search-outline" size={64} color={Colors.textMuted} />
-              <Text style={styles.emptyText}>No events found matching your search.</Text>
+              <Text style={styles.emptyText}>Aucun événement trouvé pour votre recherche.</Text>
             </View>
           }
         />
@@ -154,6 +176,10 @@ const styles = StyleSheet.create({
   cardContent: { flex: 1, gap: 4 },
   categoryBadge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, backgroundColor: Colors.tagBg },
   categoryText: { fontSize: 10, fontWeight: FontWeight.bold, color: Colors.primary },
+  statusBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  statusLive: { backgroundColor: 'rgba(239, 68, 68, 0.1)' },
+  statusUpcoming: { backgroundColor: 'rgba(56, 189, 248, 0.1)' },
+  statusText: { fontSize: 9, fontWeight: '800' },
   cardTitle: { fontSize: FontSize.md, fontWeight: FontWeight.bold, color: Colors.textPrimary },
   cardMeta: { fontSize: FontSize.xs, color: Colors.textMuted },
   emptyContainer: { alignItems: 'center', justifyContent: 'center', marginTop: 100, gap: 16 },

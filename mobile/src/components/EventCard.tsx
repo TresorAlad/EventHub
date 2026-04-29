@@ -23,7 +23,9 @@ export default function EventCard({ category, title, time, location, price, imag
           <Text style={styles.category}>{category}</Text>
           {status && (
             <View style={[styles.statusBadge, status === 'Live' ? styles.statusLive : styles.statusUpcoming]}>
-              <Text style={styles.statusText}>{status === 'Live' ? 'LIVE' : 'À VENIR'}</Text>
+              <Text style={[styles.statusText, { color: status === 'Live' ? '#ef4444' : '#38bdf8' }]}>
+                {status === 'Live' ? 'LIVE' : 'À VENIR'}
+              </Text>
             </View>
           )}
         </View>
@@ -123,6 +125,5 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#38bdf8',
   },
 });

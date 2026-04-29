@@ -82,7 +82,7 @@ export default function EventDetailsScreen({ navigation, route }: any) {
               <Image source={orgAvatar} style={{ width: '100%', height: '100%', borderRadius: 99 }} />
             </View>
             <View>
-              <Text style={styles.organizedBy}>ORGANIZED BY</Text>
+              <Text style={styles.organizedBy}>ORGANISÉ PAR</Text>
               <Text style={styles.orgName}>{orgName}</Text>
             </View>
             {!isOrganizer && (
@@ -96,8 +96,8 @@ export default function EventDetailsScreen({ navigation, route }: any) {
             <View style={styles.infoRow}>
               <View style={styles.infoIcon}><Ionicons name="calendar-outline" size={20} color={Colors.primary} /></View>
               <View>
-                <Text style={styles.infoTitle}>{eventDate.toLocaleDateString()}</Text>
-                <Text style={styles.infoSub}>{eventDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} GMT</Text>
+                <Text style={styles.infoTitle}>{eventDate.toLocaleDateString('fr-FR')}</Text>
+                <Text style={styles.infoSub}>{eventDate.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})} GMT</Text>
               </View>
             </View>
             <View style={styles.divider} />
@@ -114,7 +114,7 @@ export default function EventDetailsScreen({ navigation, route }: any) {
                   {participationMode === 'Online' || participationMode === 'online' ? 'Événement en Ligne' : 'Présentiel'}
                 </Text>
                 <Text style={styles.infoSub}>
-                  {event.location || 'Location TBA'}
+                  {event.location || 'Lieu à venir'}
                 </Text>
               </View>
             </View>
@@ -138,34 +138,28 @@ export default function EventDetailsScreen({ navigation, route }: any) {
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.sectionTitle}>About Event</Text>
+          <Text style={styles.sectionTitle}>À propos de l'événement</Text>
           <Text style={styles.description}>
              {event.description || "Rejoignez ce superbe événement pour découvrir et partager autour des technologies."}
           </Text>
 
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Speakers</Text>
-            <TouchableOpacity><Text style={styles.seeAll}>SEE ALL</Text></TouchableOpacity>
+            <Text style={styles.sectionTitle}>Intervenants</Text>
+            <TouchableOpacity><Text style={styles.seeAll}>VOIR TOUT</Text></TouchableOpacity>
           </View>
           <View style={styles.speakersRow}>
-            {SPEAKERS.map((s, i) => (
-              <View key={i} style={styles.speakerCard}>
-                <Image source={s.image} style={styles.speakerImg} />
-                <Text style={styles.speakerName}>{s.name}</Text>
-                <Text style={styles.speakerRole}>{s.role}</Text>
-              </View>
-            ))}
+            {/* Speakers mapping would go here */}
           </View>
 
-          <Text style={styles.sectionTitle}>Attendees</Text>
+          <Text style={styles.sectionTitle}>Participants</Text>
           <View style={styles.attendeesRow}>
             {[0,1,2,3,4].map((i) => (
               <View key={i} style={[styles.attendeeAvatar, { marginLeft: i === 0 ? 0 : -12 }]} />
             ))}
             <View style={styles.countBadge}>
-              <Text style={styles.countText}>+140</Text>
+              <Text style={styles.countText}>+{event.attendees || 0}</Text>
             </View>
-            <Text style={styles.attendeeText}>and 142 others are going</Text>
+            <Text style={styles.attendeeText}>et {event.attendees || 0} autres y participent</Text>
           </View>
         </View>
       </ScrollView>

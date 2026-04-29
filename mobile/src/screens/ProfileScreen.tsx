@@ -6,9 +6,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
 
 const SETTINGS = [
-  { id: 'edit', icon: 'create-outline', label: 'Edit profile' },
+  { id: 'edit', icon: 'create-outline', label: 'Modifier le profil' },
   { id: 'notif', icon: 'notifications-outline', label: 'Notifications' },
-  { id: 'privacy', icon: 'shield-outline', label: 'Privacy & Security' },
+  { id: 'privacy', icon: 'shield-outline', label: 'Sécurité & Confidentialité' },
 ];
 
 export default function ProfileScreen({ navigation, route }: any) {
@@ -55,15 +55,15 @@ export default function ProfileScreen({ navigation, route }: any) {
               <Ionicons name="checkmark-circle" size={22} color="#8b5cf6" />
             </View>
           </View>
-          <Text style={styles.name}>{userType === 'Organizer' ? 'Organisateur EventHub' : 'Farida Mensah'}</Text>
+          <Text style={styles.name}>{userType === 'Organizer' ? 'Organisateur EventHub' : 'Utilisateur'}</Text>
           <Text style={styles.bio}>
-            {userType === 'Organizer' ? 'Organisateur officiel d\'événements tech au Togo.' : 'Passionnée de tech et membre active de la communauté EventHub.'}
+            {userType === 'Organizer' ? 'Organisateur officiel d\'événements tech au Togo.' : 'Passionné de tech et membre actif de la communauté EventHub.'}
           </Text>
         </View>
 
         {/* Stats */}
         <View style={styles.statsRow}>
-          {[{ value: '24', label: 'JOINED' }, { value: '12', label: 'FAVORITES' }, { value: '3', label: 'HOSTED' }].map((s, i) => (
+          {[{ value: '24', label: 'INSCRIT' }, { value: '12', label: 'FAVORIS' }, { value: '3', label: 'ORGANISÉ' }].map((s, i) => (
             <View key={i} style={styles.statItem}>
               <Text style={styles.statValue}>{s.value}</Text>
               <Text style={styles.statLabel}>{s.label}</Text>
@@ -93,7 +93,7 @@ export default function ProfileScreen({ navigation, route }: any) {
         {/* Logout */}
         <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.85} onPress={() => navigation.replace('SignIn')}>
           <Ionicons name="log-out-outline" size={20} color={Colors.textPrimary} />
-          <Text style={styles.logoutText}>LOGOUT</Text>
+          <Text style={styles.logoutText}>DÉCONNEXION</Text>
         </TouchableOpacity>
 
         {/* Featured event card */}
@@ -102,10 +102,10 @@ export default function ProfileScreen({ navigation, route }: any) {
           <View style={styles.featuredOverlay} />
           <View style={styles.featuredContent}>
             <View style={styles.featuredTag}>
-              <Text style={styles.featuredTagText}>UPCOMING</Text>
+              <Text style={styles.featuredTagText}>À VENIR</Text>
             </View>
             <Text style={styles.featuredTitle}>Lomé Tech Summit 2026</Text>
-            <Text style={styles.featuredMeta}>Oct 12 • Palais des Congrès</Text>
+            <Text style={styles.featuredMeta}>12 Oct • Palais des Congrès</Text>
           </View>
         </View>
       </ScrollView>
