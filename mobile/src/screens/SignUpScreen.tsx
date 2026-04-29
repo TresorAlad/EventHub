@@ -10,9 +10,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   TextInput,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { auth } from '../config/firebase';
 
 type UserType = 'User' | 'Organizer' | null;
 
@@ -21,14 +24,32 @@ export default function SignUpScreen({ navigation }: any) {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   
   // Organizer specific
   const [orgName, setOrgName] = useState('');
   const [orgWebsite, setOrgWebsite] = useState('');
 
-  const handleSignUp = () => {
-    // In a real app, we'd save userType and account data
-    navigation.replace('Main', { userType });
+  const handleSignUp = async () => {
+    if (!fullName || !email || !password) {
+      Alert.alert('Champs requis', 'Merci de remplir le nom, email et mot de passe.');
+      return;
+    }
+    if (password.length < 6) {
+      Alert.alert('Mot de passe faible', 'Le mot de passe doit contenir au moins 6 caractères.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const credential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      await updateProfile(credential.user, { displayName: fullName.trim() });
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert('Inscription impossible', error?.message || 'Veuillez réessayer.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (!userType) {
@@ -180,9 +201,10 @@ export default function SignUpScreen({ navigation }: any) {
           <TouchableOpacity
             style={styles.signUpBtn}
             onPress={handleSignUp}
+            disabled={submitting}
             activeOpacity={0.88}
           >
-            <Text style={styles.signUpText}>S'inscrire →</Text>
+            <Text style={styles.signUpText}>{submitting ? 'Inscription...' : "S'inscrire →"}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

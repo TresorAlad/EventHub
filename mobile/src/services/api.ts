@@ -8,8 +8,8 @@ import { auth } from '../config/firebase';
 // ✅ Pour la production (EAS Build) :
 //    Décommentez la ligne PROD_URL et commentez la DEV_URL.
 
-const DEV_URL  = 'http://192.168.1.74:5000/api';   // Serveur local (Wi-Fi)
-const PROD_URL = 'https://backend-vhub.vercel.app/api'; // Vercel (production)
+const DEV_URL = process.env.EXPO_PUBLIC_API_URL_DEV || 'http://192.168.1.74:5000/api';
+const PROD_URL = process.env.EXPO_PUBLIC_API_URL_PROD || 'https://backend-vhub.vercel.app/api';
 
 // Change to PROD_URL when deploying via EAS Build
 const API_URL = __DEV__ ? DEV_URL : PROD_URL;
@@ -18,6 +18,19 @@ const api = axios.create({
   baseURL: API_URL,
   timeout: 10000, // 10 secondes max
 });
+
+type ApiEnvelope<T> = {
+  success: boolean;
+  data: T;
+  message?: string;
+};
+
+const unwrap = <T>(payload: T | ApiEnvelope<T>): T => {
+  if (payload && typeof payload === 'object' && 'success' in (payload as Record<string, unknown>)) {
+    return (payload as ApiEnvelope<T>).data;
+  }
+  return payload as T;
+};
 
 // Attach Firebase ID token to every authenticated request
 api.interceptors.request.use(async (config) => {
@@ -46,29 +59,29 @@ api.interceptors.response.use(
 
 export const syncUserWithBackend = async () => {
   const response = await api.post('/auth/sync');
-  return response.data;
+  return unwrap(response.data);
 };
 
 export const getEvents = async () => {
   const response = await api.get('/events');
-  return response.data;
+  return unwrap(response.data);
 };
 
 export const createEvent = async (eventData: FormData) => {
   const response = await api.post('/events', eventData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
-  return response.data;
+  return unwrap(response.data);
 };
 
 export const getProfile = async () => {
   const response = await api.get('/auth/profile');
-  return response.data;
+  return unwrap(response.data);
 };
 
 export const updateProfile = async (data: { name?: string; bio?: string; avatar?: string }) => {
   const response = await api.put('/auth/profile', data);
-  return response.data;
+  return unwrap(response.data);
 };
 
 export default api;

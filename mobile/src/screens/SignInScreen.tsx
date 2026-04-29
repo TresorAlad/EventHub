@@ -16,7 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
-import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithCredential, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config/firebase';
 
 WebBrowser.maybeCompleteAuthSession();
@@ -25,39 +25,53 @@ export default function SignInScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPwd, setShowPwd] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   
   const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: "YOUR_ANDROID_CLIENT_ID",
-    iosClientId: "YOUR_IOS_CLIENT_ID",
-    webClientId: "YOUR_WEB_CLIENT_ID",
+    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
   });
 
   useEffect(() => {
     if (response?.type === 'success') {
       const { id_token } = response.params;
       const credential = GoogleAuthProvider.credential(id_token);
+      setSubmitting(true);
       signInWithCredential(auth, credential)
-        .then(() => {
-          navigation.replace('Main');
-        })
         .catch((error) => {
           console.error(error);
           Alert.alert('Error', 'Failed to sign in with Google');
+        })
+        .finally(() => {
+          setSubmitting(false);
         });
     }
-  }, [response]);
+  }, [response, navigation]);
 
   const handleGoogleSignIn = () => {
+    if (!request) {
+      Alert.alert('Configuration requise', 'Configurez les client IDs Google dans les variables EXPO_PUBLIC_GOOGLE_*.');
+      return;
+    }
     promptAsync();
   };
 
-  const handleSignIn = () => {
+  const handleSignIn = async () => {
     if (!email || !password) {
       Alert.alert('Erreur', 'Veuillez remplir tous les champs.');
       return;
     }
-    // In a real app, logic here. For now, navigate.
-    navigation.replace('Main');
+
+    setSubmitting(true);
+    try {
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert('Erreur de connexion', error?.message || 'Connexion impossible avec ces identifiants.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -123,6 +137,7 @@ export default function SignInScreen({ navigation }: any) {
           <TouchableOpacity
             style={styles.signInBtn}
             onPress={handleSignIn}
+            disabled={submitting}
             activeOpacity={0.88}
           >
             <Text style={styles.signInText}>Sign In →</Text>
@@ -141,7 +156,7 @@ export default function SignInScreen({ navigation }: any) {
               style={styles.socialBtn} 
               activeOpacity={0.85}
               onPress={handleGoogleSignIn}
-              disabled={!request}
+              disabled={!request || submitting}
             >
               <Ionicons name="logo-google" size={18} color={Colors.textPrimary} />
               <Text style={styles.socialText}>Google</Text>
