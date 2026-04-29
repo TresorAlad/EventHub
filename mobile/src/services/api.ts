@@ -9,7 +9,7 @@ import { auth } from '../config/firebase';
 //    Décommentez la ligne PROD_URL et commentez la DEV_URL.
 
 const DEV_URL  = 'http://192.168.1.74:5000/api';   // Serveur local (Wi-Fi)
-const PROD_URL = 'https://eventtechtech.vercel.app/api'; // Vercel (production)
+const PROD_URL = 'https://backend-vhub.vercel.app/api'; // Vercel (production)
 
 // Change to PROD_URL when deploying via EAS Build
 const API_URL = __DEV__ ? DEV_URL : PROD_URL;
