@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { auth } from '../config/firebase';
 
-const API_URL = 'http://12.12.12.129:5000/api'; // Corrected machine IP
+const API_URL = 'http://12.12.12.129:5000/api'; // Local Development (Machine IP)
+// const API_URL = 'https://eventhub-api.vercel.app/api'; // Production Environment (Vercel)
 
 const api = axios.create({
   baseURL: API_URL,
