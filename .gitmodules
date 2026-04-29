@@ -1,0 +1,6 @@
+[submodule "web-admin"]
+	path = web-admin
+	url = https://github.com/TresorAlad/WebEVENT.git
+[submodule "server"]
+	path = server
+	url = https://github.com/TresorAlad/Backend-Vhub.git
