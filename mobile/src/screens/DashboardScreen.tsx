@@ -23,9 +23,9 @@ export default function DashboardScreen({ navigation }: any) {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {/* Header */}
         <View style={styles.header}>
-          <Image 
-            source={require('../../assets/logo.jpeg')} 
-            style={styles.avatar} 
+          <Image
+            source={require('../../assets/logo.jpeg')}
+            style={styles.avatar}
           />
           <Text style={styles.appName}>EventHub</Text>
           <TouchableOpacity style={styles.searchIcon} onPress={() => navigation.navigate('Search')}>
