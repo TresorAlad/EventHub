@@ -1,4 +1,5 @@
 import React from 'react';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 
 import SplashScreen from '../screens/SplashScreen';
@@ -14,14 +15,25 @@ import FilterScreen from '../screens/FilterScreen';
 import PrivacySecurityScreen from '../screens/PrivacySecurityScreen';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
+import { Colors } from '../theme';
 
 const Stack = createStackNavigator();
+
+function AuthLoadingScreen() {
+  return (
+    <View style={styles.loadingRoot}>
+      <ActivityIndicator size="large" color={Colors.white} />
+    </View>
+  );
+}
 
 export default function RootNavigator() {
   const { user, loading } = useAuth();
   useNotifications(user);
 
-  if (loading) return <SplashScreen />; // Or a custom loader
+  // Ne pas rendre SplashScreen ici : hors Stack, `navigation` est undefined et
+  // SplashScreen appelle navigation.replace → crash Expo Go ("Something went wrong").
+  if (loading) return <AuthLoadingScreen />;
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -58,3 +70,12 @@ export default function RootNavigator() {
     </Stack.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingRoot: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.primary,
+  },
+});

@@ -21,6 +21,10 @@ import { auth } from '../config/firebase';
 
 WebBrowser.maybeCompleteAuthSession();
 
+const GOOGLE_ANDROID_CLIENT_ID = '573518128565-nfkam62jg5q5frdhi6gsb36uomjgpba1.apps.googleusercontent.com';
+const GOOGLE_IOS_CLIENT_ID = '';
+const GOOGLE_WEB_CLIENT_ID = '573518128565-kc82asdf0e8hu1gkbjpuc0bhkd1u4tfa.apps.googleusercontent.com';
+
 export default function SignInScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,9 +32,9 @@ export default function SignInScreen({ navigation }: any) {
   const [submitting, setSubmitting] = useState(false);
   
   const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    androidClientId: GOOGLE_ANDROID_CLIENT_ID,
+    iosClientId: GOOGLE_IOS_CLIENT_ID || undefined,
+    webClientId: GOOGLE_WEB_CLIENT_ID,
   });
 
   useEffect(() => {
@@ -50,8 +54,9 @@ export default function SignInScreen({ navigation }: any) {
   }, [response, navigation]);
 
   const handleGoogleSignIn = () => {
-    if (!request) {
-      Alert.alert('Configuration requise', 'Configurez les client IDs Google dans les variables EXPO_PUBLIC_GOOGLE_*.');
+    const hasGoogleIds = Boolean(GOOGLE_ANDROID_CLIENT_ID && GOOGLE_WEB_CLIENT_ID);
+    if (!request || !hasGoogleIds) {
+      Alert.alert('Configuration requise', 'Configurez les constantes GOOGLE_*_CLIENT_ID dans SignInScreen.tsx.');
       return;
     }
     promptAsync();

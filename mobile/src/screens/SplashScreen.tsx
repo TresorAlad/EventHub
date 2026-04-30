@@ -25,7 +25,9 @@ export default function SplashScreen({ navigation }: any) {
     ]).start();
 
     const timer = setTimeout(() => {
-      navigation.replace('Onboarding');
+      if (navigation?.replace) {
+        navigation.replace('Onboarding');
+      }
     }, 2800);
     return () => clearTimeout(timer);
   }, []);

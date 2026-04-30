@@ -2,12 +2,13 @@
   "expo": {
     "name": "EventHub",
     "slug": "eventhub-mobile",
+    "scheme": "eventhub-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/logo.jpeg",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/logo.jpeg",
+      "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#03045e"
     },
@@ -18,7 +19,7 @@
       "package": "com.eventhub.togo",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/logo.jpeg",
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#03045e"
       }
     },

@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
+import { useAuth } from '../hooks/useAuth';
 
 const SETTINGS = [
   { id: 'edit', icon: 'create-outline', label: 'Modifier le profil' },
@@ -12,6 +13,7 @@ const SETTINGS = [
 ];
 
 export default function ProfileScreen({ navigation, route }: any) {
+  const { logout } = useAuth();
   const userType = route.params?.userType || 'User';
 
   const handleSettingPress = (id: string, label: string) => {
@@ -91,7 +93,17 @@ export default function ProfileScreen({ navigation, route }: any) {
         </View>
 
         {/* Logout */}
-        <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.85} onPress={() => navigation.replace('SignIn')}>
+        <TouchableOpacity
+          style={styles.logoutBtn}
+          activeOpacity={0.85}
+          onPress={async () => {
+            try {
+              await logout();
+            } catch (e) {
+              Alert.alert('Erreur', 'Impossible de se déconnecter.');
+            }
+          }}
+        >
           <Ionicons name="log-out-outline" size={20} color={Colors.textPrimary} />
           <Text style={styles.logoutText}>DÉCONNEXION</Text>
         </TouchableOpacity>

@@ -1,18 +1,7 @@
 import axios from 'axios';
 import { auth } from '../config/firebase';
 
-// ✅ Pour le développement local avec Expo Go :
-//    Le téléphone doit être sur le MÊME réseau Wi-Fi que votre machine.
-//    Remplacez l'IP par celle affichée par "hostname -I" sur votre machine.
-//
-// ✅ Pour la production (EAS Build) :
-//    Décommentez la ligne PROD_URL et commentez la DEV_URL.
-
-const DEV_URL = process.env.EXPO_PUBLIC_API_URL_DEV || 'http://192.168.1.74:5000/api';
-const PROD_URL = process.env.EXPO_PUBLIC_API_URL_PROD || 'https://backend-vhub.vercel.app/api';
-
-// Change to PROD_URL when deploying via EAS Build
-const API_URL = __DEV__ ? DEV_URL : PROD_URL;
+const API_URL = 'https://backend-vhub.vercel.app/api';
 
 const api = axios.create({
   baseURL: API_URL,

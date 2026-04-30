@@ -27,13 +27,19 @@ export const useAuth = () => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser);
-      if (firebaseUser) {
-        await refreshUser();
-      } else {
+      try {
+        setUser(firebaseUser);
+        if (firebaseUser) {
+          await refreshUser();
+        } else {
+          setDbUser(null);
+        }
+      } catch (error) {
+        console.error('Auth state handler error:', error);
         setDbUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return unsubscribe;
