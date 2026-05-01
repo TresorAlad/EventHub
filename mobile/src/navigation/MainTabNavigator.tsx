@@ -8,14 +8,13 @@ import HomeScreen from '../screens/HomeScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import { useAuth } from '../hooks/useAuth';
 
 const Tab = createBottomTabNavigator();
 
 export default function MainTabNavigator({ route }: any) {
-  // Get userType from route params (passed from Sign In or Sign Up)
-  // Default to 'User' if not provided for safety
-  const userType = route.params?.userType || 'User';
-  const isOrganizer = userType === 'Organizer';
+  const { dbUser } = useAuth();
+  const isOrganizer = dbUser?.role === 'ORGANIZER' || dbUser?.role === 'ADMIN';
 
   return (
     <Tab.Navigator

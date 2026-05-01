@@ -9,7 +9,8 @@ import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows, Fonts } f
 
 import { getEvents } from '../services/api';
 
-export default function SearchScreen({ navigation }: any) {
+export default function SearchScreen({ route, navigation }: any) {
+  const organizerId = route.params?.organizerId;
   const [searchQuery, setSearchQuery] = useState('');
   const [allEvents, setAllEvents] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
@@ -21,8 +22,12 @@ export default function SearchScreen({ navigation }: any) {
   const fetchEvents = async () => {
     try {
       const data = await getEvents();
-      setAllEvents(data);
-      setResults(data);
+      let filteredData = data;
+      if (organizerId) {
+        filteredData = data.filter((e: any) => e.organizerId === organizerId);
+      }
+      setAllEvents(filteredData);
+      setResults(filteredData);
     } catch (error) {
       console.error('Failed to fetch events on search screen', error);
     }
@@ -45,11 +50,12 @@ export default function SearchScreen({ navigation }: any) {
   const renderItem = ({ item }: any) => {
     const now = new Date();
     const start = new Date(item.date);
-    const end = item.endDate ? new Date(item.endDate) : null;
+    const end = item.endDate ? new Date(item.endDate) : new Date(start.getTime() + 4 * 60 * 60 * 1000);
     let status = 'Upcoming';
-    if (now >= start) {
-      if (!end || now <= end) status = 'Live';
-      else status = 'Past';
+    if (now > end) {
+      status = 'Expired';
+    } else if (now >= start && now <= end) {
+      status = 'Live';
     }
 
     return (
@@ -62,13 +68,21 @@ export default function SearchScreen({ navigation }: any) {
             <View style={styles.categoryBadge}>
               <Text style={styles.categoryText}>{item.category || 'TECH'}</Text>
             </View>
-            {status !== 'Past' && (
-              <View style={[styles.statusBadge, status === 'Live' ? styles.statusLive : styles.statusUpcoming]}>
-                <Text style={[styles.statusText, { color: status === 'Live' ? '#ef4444' : '#38bdf8' }]}>
-                  {status === 'Live' ? 'LIVE' : 'À VENIR'}
-                </Text>
-              </View>
-            )}
+            <View
+              style={[
+                styles.statusBadge,
+                status === 'Live' ? styles.statusLive : status === 'Expired' ? styles.statusExpired : styles.statusUpcoming,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.statusText,
+                  { color: status === 'Live' ? '#ef4444' : status === 'Expired' ? '#64748b' : '#38bdf8' },
+                ]}
+              >
+                {status === 'Live' ? 'LIVE' : status === 'Expired' ? 'EXPIRÉ' : 'À VENIR'}
+              </Text>
+            </View>
           </View>
           <Text style={styles.cardTitle}>{item.title}</Text>
           <Text style={styles.cardMeta}>
@@ -93,7 +107,7 @@ export default function SearchScreen({ navigation }: any) {
           <Ionicons name="search" size={20} color={Colors.textMuted} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Rechercher événements, organisateurs..."
+            placeholder={organizerId ? "Rechercher dans vos événements..." : "Rechercher événements, organisateurs..."}
             value={searchQuery}
             onChangeText={handleSearch}
             autoFocus
@@ -112,7 +126,7 @@ export default function SearchScreen({ navigation }: any) {
       <View style={styles.content}>
         <View style={styles.resultsHeader}>
           <Text style={styles.resultsTitle}>
-            {searchQuery === '' ? 'Recherches Populaires' : `Résultats pour "${searchQuery}"`}
+            {searchQuery === '' ? (organizerId ? 'Tous vos événements' : 'Recherches Populaires') : `Résultats pour "${searchQuery}"`}
           </Text>
           <Text style={styles.resultsCount}>{results.length} trouvé{results.length > 1 ? 's' : ''}</Text>
         </View>
@@ -179,6 +193,7 @@ const styles = StyleSheet.create({
   statusBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   statusLive: { backgroundColor: 'rgba(239, 68, 68, 0.1)' },
   statusUpcoming: { backgroundColor: 'rgba(56, 189, 248, 0.1)' },
+  statusExpired: { backgroundColor: 'rgba(100, 116, 139, 0.12)' },
   statusText: { fontSize: 9, fontWeight: '800' },
   cardTitle: { fontSize: FontSize.md, fontWeight: FontWeight.bold, color: Colors.textPrimary },
   cardMeta: { fontSize: FontSize.xs, color: Colors.textMuted },

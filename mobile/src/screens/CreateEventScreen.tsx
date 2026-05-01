@@ -5,7 +5,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
-import { createEvent } from '../services/api';
+import { createEvent, updateEvent } from '../services/api';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -13,33 +13,41 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 
 const CATEGORIES = ['Innovation & Fintech', 'Hackathon', 'Meetup', 'Workshop', 'Conférence', 'Pitch Night', 'Web3 & Crypto'];
 
-export default function CreateEventScreen({ navigation }: any) {
+export default function CreateEventScreen({ route, navigation }: any) {
+  const eventToEdit = route?.params?.event;
+  const isEditing = !!eventToEdit;
+
   const [step, setStep] = useState(1);
   const TOTAL_STEPS = 4;
   const [loading, setLoading] = useState(false);
 
+  const initialDate = eventToEdit?.date ? new Date(eventToEdit.date) : null;
+  const initialEndDate = eventToEdit?.endDate ? new Date(eventToEdit.endDate) : null;
+
   // Step 1
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState(eventToEdit?.title || '');
   const [organizer, setOrganizer] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState(CATEGORIES[0]);
-  const [image, setImage] = useState<string | null>(null);
+  const [description, setDescription] = useState(eventToEdit?.description || '');
+  const [category, setCategory] = useState(eventToEdit?.category || CATEGORIES[0]);
+  const [image, setImage] = useState<string | null>(eventToEdit?.imageUrl || null);
 
   // Step 2
-  const [startDate, setStartDate] = useState('');
-  const [startTime, setStartTime] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [endTime, setEndTime] = useState('');
+  const [startDate, setStartDate] = useState(initialDate ? initialDate.toISOString().split('T')[0] : '');
+  const [startTime, setStartTime] = useState(initialDate ? initialDate.toISOString().substring(11, 16) : '');
+  const [endDate, setEndDate] = useState(initialEndDate ? initialEndDate.toISOString().split('T')[0] : '');
+  const [endTime, setEndTime] = useState(initialEndDate ? initialEndDate.toISOString().substring(11, 16) : '');
 
   // Step 3
-  const [eventType, setEventType] = useState<'in-person' | 'online' | 'hybrid'>('in-person');
-  const [location, setLocation] = useState('');
+  const [eventType, setEventType] = useState<'in-person' | 'online' | 'hybrid'>(
+    eventToEdit?.participationMode === 'Online' ? 'online' : eventToEdit?.participationMode === 'Hybrid' ? 'hybrid' : 'in-person'
+  );
+  const [location, setLocation] = useState(eventToEdit?.location || '');
   const [city, setCity] = useState('');
-  const [meetingLink, setMeetingLink] = useState('');
+  const [meetingLink, setMeetingLink] = useState(eventToEdit?.participationMode === 'Online' ? eventToEdit?.location || '' : '');
 
   // Step 4
-  const [isExternal, setIsExternal] = useState(false);
-  const [externalLink, setExternalLink] = useState('');
+  const [isExternal, setIsExternal] = useState(eventToEdit?.registrationMode === 'External');
+  const [externalLink, setExternalLink] = useState(eventToEdit?.externalLink || '');
 
 
 
@@ -96,19 +104,24 @@ export default function CreateEventScreen({ navigation }: any) {
         formData.append('externalLink', externalLink);
       }
 
-      if (image) {
+      if (image && !image.startsWith('http')) {
         const filename = image.split('/').pop() || 'banner.jpg';
         const match = /\.(\w+)$/.exec(filename);
         const type = match ? `image/${match[1]}` : `image/jpeg`;
         formData.append('image', { uri: image, name: filename, type } as any);
       }
 
-      await createEvent(formData);
-      Alert.alert('Succès', 'Événement publié avec succès !');
+      if (isEditing) {
+        await updateEvent(eventToEdit.id, formData);
+        Alert.alert('Succès', 'Événement modifié avec succès !');
+      } else {
+        await createEvent(formData);
+        Alert.alert('Succès', 'Événement publié avec succès !');
+      }
       navigation.goBack();
     } catch (error: any) {
       console.error(error?.response?.data || error);
-      Alert.alert('Erreur', 'Échec de la publication de l\'événement.');
+      Alert.alert('Erreur', isEditing ? 'Échec de la modification.' : 'Échec de la publication de l\'événement.');
     } finally {
       setLoading(false);
     }
@@ -284,7 +297,7 @@ export default function CreateEventScreen({ navigation }: any) {
           </TouchableOpacity>
         ) : (
           <TouchableOpacity style={styles.publishBtn} onPress={handlePublish} disabled={loading}>
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryBtnText}>Publier l'événement</Text>}
+            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryBtnText}>{isEditing ? "Enregistrer les modifications" : "Publier l'événement"}</Text>}
           </TouchableOpacity>
         )}
       </View>

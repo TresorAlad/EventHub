@@ -15,6 +15,7 @@ interface EventCardProps {
 }
 
 export default function EventCard({ category, title, time, location, price, image, status, onPress }: EventCardProps) {
+  const isExpired = status === 'Expired' || status === 'Past';
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.9}>
       <Image source={image} style={styles.image} />
@@ -22,9 +23,19 @@ export default function EventCard({ category, title, time, location, price, imag
         <View style={styles.headerRow}>
           <Text style={styles.category}>{category}</Text>
           {status && (
-            <View style={[styles.statusBadge, status === 'Live' ? styles.statusLive : styles.statusUpcoming]}>
-              <Text style={[styles.statusText, { color: status === 'Live' ? '#ef4444' : '#38bdf8' }]}>
-                {status === 'Live' ? 'LIVE' : 'À VENIR'}
+            <View
+              style={[
+                styles.statusBadge,
+                status === 'Live' ? styles.statusLive : isExpired ? styles.statusExpired : styles.statusUpcoming,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.statusText,
+                  { color: status === 'Live' ? '#ef4444' : isExpired ? '#64748b' : '#38bdf8' },
+                ]}
+              >
+                {status === 'Live' ? 'LIVE' : isExpired ? 'EXPIRÉ' : 'À VENIR'}
               </Text>
             </View>
           )}
@@ -121,6 +132,9 @@ const styles = StyleSheet.create({
   },
   statusUpcoming: {
     backgroundColor: 'rgba(56, 189, 248, 0.1)',
+  },
+  statusExpired: {
+    backgroundColor: 'rgba(100, 116, 139, 0.12)',
   },
   statusText: {
     fontSize: 9,

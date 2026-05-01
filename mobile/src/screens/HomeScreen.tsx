@@ -46,8 +46,17 @@ export default function HomeScreen({ navigation }: any) {
     }
   };
 
-  const trendingEvents = events.slice(0, 3);
-  const upcomingEvents = events.slice(3, 10);
+  const isExpired = (item: any) => {
+    const now = new Date();
+    const start = item?.date ? new Date(item.date) : now;
+    const end = item?.endDate ? new Date(item.endDate) : new Date(start.getTime() + 4 * 60 * 60 * 1000);
+    return now > end;
+  };
+
+  // Accueil: on enlève les événements expirés
+  const visibleEvents = events.filter((e) => !isExpired(e));
+  const trendingEvents = visibleEvents.slice(0, 3);
+  const upcomingEvents = visibleEvents.slice(3, 10);
 
   return (
     <View style={styles.container}>
@@ -57,9 +66,9 @@ export default function HomeScreen({ navigation }: any) {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Image 
-               source={require('../../assets/logo.jpeg')} 
-               style={styles.avatar} 
+            <Image
+              source={require('../../assets/logo.jpeg')}
+              style={styles.avatar}
             />
             <Text style={styles.appName}>EventHub</Text>
           </View>
@@ -104,9 +113,9 @@ export default function HomeScreen({ navigation }: any) {
         </View>
 
         {loading ? (
-           <View style={{ padding: 20, alignItems: 'center' }}>
-             <ActivityIndicator size="large" color={Colors.primary} />
-           </View>
+          <View style={{ padding: 20, alignItems: 'center' }}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+          </View>
         ) : (
           <>
             {/* Trending */}
@@ -121,11 +130,12 @@ export default function HomeScreen({ navigation }: any) {
                 {trendingEvents.length > 0 ? trendingEvents.map((item) => {
                   const now = new Date();
                   const start = new Date(item.date);
-                  const end = item.endDate ? new Date(item.endDate) : null;
+                  const end = item.endDate ? new Date(item.endDate) : new Date(start.getTime() + 4 * 60 * 60 * 1000);
                   let status = 'Upcoming';
-                  if (now >= start) {
-                    if (!end || now <= end) status = 'Live';
-                    else status = 'Past';
+                  if (now > end) {
+                    status = 'Expired';
+                  } else if (now >= start && now <= end) {
+                    status = 'Live';
                   }
 
                   return (
@@ -142,7 +152,7 @@ export default function HomeScreen({ navigation }: any) {
                     />
                   );
                 }) : (
-                  <Text style={{color: Colors.textMuted}}>Aucun événement en tendance</Text>
+                  <Text style={{ color: Colors.textMuted }}>Aucun événement en tendance</Text>
                 )}
               </ScrollView>
             </View>
@@ -150,32 +160,33 @@ export default function HomeScreen({ navigation }: any) {
             {/* Upcoming */}
             <View style={[styles.section, { paddingBottom: 100 }]}>
               <Text style={styles.sectionTitle}>Événements à Venir</Text>
-                {upcomingEvents.length > 0 ? upcomingEvents.map((item) => {
-                  const now = new Date();
-                  const start = new Date(item.date);
-                  const end = item.endDate ? new Date(item.endDate) : null;
-                  let status = 'Upcoming';
-                  if (now >= start) {
-                    if (!end || now <= end) status = 'Live';
-                    else status = 'Past';
-                  }
+              {upcomingEvents.length > 0 ? upcomingEvents.map((item) => {
+                const now = new Date();
+                const start = new Date(item.date);
+                const end = item.endDate ? new Date(item.endDate) : new Date(start.getTime() + 4 * 60 * 60 * 1000);
+                let status = 'Upcoming';
+                if (now > end) {
+                  status = 'Expired';
+                } else if (now >= start && now <= end) {
+                  status = 'Live';
+                }
 
-                  return (
-                    <EventCard
-                      key={item.id}
-                      category={item.category || 'Tech'}
-                      title={item.title}
-                      location={item.location || 'Lomé'}
-                      time={new Date(item.date).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' })}
-                      price={item.price > 0 ? `${item.price} FCFA` : 'Gratuit'}
-                      image={item.imageUrl ? { uri: item.imageUrl } : require('../../assets/onboarding1.png')}
-                      status={status}
-                      onPress={() => navigation.navigate('EventDetails', { event: item })}
-                    />
-                  )
-                }) : (
-                  <Text style={{color: Colors.textMuted}}>Pas d'événements à venir</Text>
-                )}
+                return (
+                  <EventCard
+                    key={item.id}
+                    category={item.category || 'Tech'}
+                    title={item.title}
+                    location={item.location || 'Lomé'}
+                    time={new Date(item.date).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' })}
+                    price={item.price > 0 ? `${item.price} FCFA` : 'Gratuit'}
+                    image={item.imageUrl ? { uri: item.imageUrl } : require('../../assets/onboarding1.png')}
+                    status={status}
+                    onPress={() => navigation.navigate('EventDetails', { event: item })}
+                  />
+                )
+              }) : (
+                <Text style={{ color: Colors.textMuted }}>Pas d'événements à venir</Text>
+              )}
             </View>
           </>
         )}

@@ -16,14 +16,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../config/firebase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type UserType = 'User' | 'Organizer' | null;
+const SIGNUP_ROLE_KEY = 'eventhub:signupDesiredRole';
+const SIGNUP_ORG_NAME_KEY = 'eventhub:signupOrganizationName';
 
 export default function SignUpScreen({ navigation }: any) {
   const [userType, setUserType] = useState<UserType>(null);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   
   // Organizer specific
@@ -35,6 +39,10 @@ export default function SignUpScreen({ navigation }: any) {
       Alert.alert('Champs requis', 'Merci de remplir le nom, email et mot de passe.');
       return;
     }
+    if (password !== confirmPassword) {
+      Alert.alert('Mot de passe', 'Les mots de passe ne correspondent pas.');
+      return;
+    }
     if (password.length < 6) {
       Alert.alert('Mot de passe faible', 'Le mot de passe doit contenir au moins 6 caractères.');
       return;
@@ -43,7 +51,19 @@ export default function SignUpScreen({ navigation }: any) {
     setSubmitting(true);
     try {
       const credential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      // Firebase displayName = nom de la personne. Le nom de l'organisation est stocké côté backend.
       await updateProfile(credential.user, { displayName: fullName.trim() });
+
+      // Persist the desired role for the first backend sync after login.
+      if (userType === 'Organizer') {
+        await AsyncStorage.setItem(SIGNUP_ROLE_KEY, 'ORGANIZER');
+        if (orgName.trim().length > 0) {
+          await AsyncStorage.setItem(SIGNUP_ORG_NAME_KEY, orgName.trim());
+        }
+      } else {
+        await AsyncStorage.removeItem(SIGNUP_ROLE_KEY);
+        await AsyncStorage.removeItem(SIGNUP_ORG_NAME_KEY);
+      }
     } catch (error: any) {
       console.error(error);
       Alert.alert('Inscription impossible', error?.message || 'Veuillez réessayer.');
@@ -194,6 +214,20 @@ export default function SignUpScreen({ navigation }: any) {
                 placeholder="********"
                 value={password}
                 onChangeText={setPassword}
+              />
+            </View>
+          </View>
+
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Confirmer le mot de passe</Text>
+            <View style={styles.inputBox}>
+              <Ionicons name="lock-closed-outline" size={20} color={Colors.textMuted} />
+              <TextInput
+                style={styles.inputText}
+                secureTextEntry
+                placeholder="********"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
               />
             </View>
           </View>

@@ -4,18 +4,75 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
-
-const BAR_DATA = [30, 55, 40, 80, 95, 60, 72];
-const BAR_LABELS = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
-
-const MY_EVENTS = [
-  { status: 'LIVE', statusColor: '#22c55e', date: '24 Oct', title: 'Togo Tech Summit 2026', participants: '840/1000', revenue: '$42,000' },
-  { status: 'DRAFT', statusColor: '#f59e0b', date: '12 Nov', title: 'AI & Ethics Workshop', participants: '0/50', countdown: 'In 21 days' },
-  { status: 'ENDING SOON', statusColor: '#ef4444', date: '15 Oct', title: 'Lomé Hackathon 2025', participants: '200/200', note: 'Completed' },
-];
+import React, { useEffect, useMemo, useState } from 'react';
+import { getEvents, deleteEvent } from '../services/api';
+import { useAuth } from '../hooks/useAuth';
 
 export default function DashboardScreen({ navigation }: any) {
-  const maxBar = Math.max(...BAR_DATA);
+  const { dbUser } = useAuth();
+  const [events, setEvents] = useState<any[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const data = await getEvents();
+        if (mounted) setEvents(Array.isArray(data) ? data : []);
+      } catch (e) {
+        // non-blocking
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const myEvents = useMemo(() => {
+    if (!dbUser?.id) return [];
+    return events.filter((e) => e?.organizerId === dbUser.id);
+  }, [events, dbUser?.id]);
+
+  const statusOf = (item: any) => {
+    const now = new Date();
+    const start = item?.date ? new Date(item.date) : now;
+    const end = item?.endDate ? new Date(item.endDate) : new Date(start.getTime() + 4 * 60 * 60 * 1000);
+    if (now > end) return 'Expired';
+    if (now >= start && now <= end) return 'Live';
+    return 'Upcoming';
+  };
+
+  const isOlderThan7Days = (item: any) => {
+    const now = new Date();
+    const start = item?.date ? new Date(item.date) : now;
+    const end = item?.endDate ? new Date(item.endDate) : null;
+    const endTime = end || start;
+    return now.getTime() - endTime.getTime() > 7 * 24 * 60 * 60 * 1000;
+  };
+
+  // Dashboard organisateur: on garde même les expirés, mais on peut cacher ceux > 7 jours sur la vue "Accueil"
+  const visibleMyEvents = myEvents.filter((e) => !(statusOf(e) === 'Expired' && isOlderThan7Days(e) && false));
+
+  const handleDelete = (eventId: string) => {
+    Alert.alert(
+      'Supprimer',
+      'Voulez-vous vraiment supprimer cet événement ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { 
+          text: 'Supprimer', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteEvent(eventId);
+              setEvents((prev) => prev.filter((e) => e.id !== eventId));
+            } catch (err: any) {
+              Alert.alert('Erreur', 'Impossible de supprimer cet événement.');
+            }
+          }
+        }
+      ]
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -33,98 +90,75 @@ export default function DashboardScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.greeting}>Bonjour, Organisateur 👋</Text>
+        <Text style={styles.greeting}>Bonjour{dbUser?.organizationName ? `, ${dbUser.organizationName}` : ' 👋'}</Text>
         <Text style={styles.greetingSub}>Voici l'état actuel de vos événements technologiques aujourd'hui.</Text>
 
-        {/* Main stat card */}
-        <View style={styles.mainStatCard}>
-          <View style={styles.mainStatHeader}>
-            <Text style={styles.mainStatLabel}>PARTICIPANTS</Text>
-            <View style={styles.trendBadge}>
-              <Ionicons name="trending-up" size={12} color="#22c55e" />
-              <Text style={styles.trendText}>12%</Text>
-            </View>
-          </View>
-          <Text style={styles.mainStatValue}>1,284</Text>
-          {/* Bar chart */}
-          <View style={styles.barChart}>
-            {BAR_DATA.map((val, i) => (
-              <View key={i} style={styles.barGroup}>
-                <View style={[
-                  styles.bar,
-                  { height: (val / maxBar) * 80 },
-                  i === 4 && styles.barActive,
-                ]} />
-                <Text style={styles.barLabel}>{BAR_LABELS[i]}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {/* Sub stats */}
+        {/* Stats simples */}
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
-            <Text style={styles.statLabel}>VIEWS</Text>
-            <Text style={styles.statValue}>12.5k</Text>
-            <View style={styles.statTrendRow}>
-              <Ionicons name="arrow-up" size={12} color={Colors.success} />
-              <Text style={[styles.statTrend, { color: Colors.success }]}>+4%</Text>
-            </View>
+            <Text style={styles.statLabel}>PUBLIÉS</Text>
+            <Text style={styles.statValue}>{myEvents.length}</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statLabel}>ACTIVE</Text>
-            <Text style={styles.statValue}>342</Text>
-            <View style={styles.statTrendRow}>
-              <Ionicons name="arrow-down" size={12} color={Colors.danger} />
-              <Text style={[styles.statTrend, { color: Colors.danger }]}>-2%</Text>
-            </View>
+            <Text style={styles.statLabel}>EXPIRÉS</Text>
+            <Text style={styles.statValue}>{myEvents.filter((e) => statusOf(e) === 'Expired').length}</Text>
           </View>
         </View>
 
         {/* Events list */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Your Events</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Search')}><Text style={styles.seeAll}>See All</Text></TouchableOpacity>
+          <Text style={styles.sectionTitle}>Tous vos événements</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Search', { organizerId: dbUser?.id })}><Text style={styles.seeAll}>Voir tout</Text></TouchableOpacity>
         </View>
 
-        {MY_EVENTS.map((ev, i) => (
-          <View key={i} style={styles.eventRow}>
-            <View style={styles.eventThumb} />
-            <View style={styles.eventInfo}>
-              <View style={styles.eventMeta}>
-                <View style={[styles.statusBadge, { backgroundColor: ev.statusColor + '20' }]}>
-                  <Text style={[styles.statusText, { color: ev.statusColor }]}>{ev.status}</Text>
-                </View>
-                <Text style={styles.eventDate}>{ev.date}</Text>
-              </View>
-              <Text style={styles.eventTitle}>{ev.title}</Text>
-              <View style={styles.eventFooter}>
-                <View style={styles.eventFooterItem}>
-                  <Ionicons name="people-outline" size={13} color={Colors.textMuted} />
-                  <Text style={styles.eventFooterText}>{ev.participants}</Text>
-                </View>
-                {ev.revenue && (
-                  <View style={styles.eventFooterItem}>
-                    <Ionicons name="card-outline" size={13} color={Colors.textMuted} />
-                    <Text style={styles.eventFooterText}>{ev.revenue}</Text>
-                  </View>
-                )}
-                {ev.countdown && (
-                  <View style={styles.eventFooterItem}>
-                    <Ionicons name="calendar-outline" size={13} color={Colors.textMuted} />
-                    <Text style={styles.eventFooterText}>{ev.countdown}</Text>
-                  </View>
-                )}
-                {ev.note && (
-                  <View style={styles.eventFooterItem}>
-                    <Ionicons name="checkmark-circle-outline" size={13} color={Colors.success} />
-                    <Text style={[styles.eventFooterText, { color: Colors.success }]}>{ev.note}</Text>
-                  </View>
-                )}
-              </View>
-            </View>
+        {visibleMyEvents.length === 0 ? (
+          <View style={styles.emptyBox}>
+            <Ionicons name="calendar-outline" size={18} color={Colors.textMuted} />
+            <Text style={styles.emptyText}>Aucun événement à afficher.</Text>
           </View>
-        ))}
+        ) : (
+          visibleMyEvents.map((ev) => (
+            <TouchableOpacity
+              key={ev.id}
+              style={styles.eventRow}
+              onPress={() => navigation.navigate('OrganizerEventDashboard', { event: ev })}
+              activeOpacity={0.85}
+            >
+              <Image 
+                source={ev.imageUrl ? { uri: ev.imageUrl } : require('../../assets/onboarding1.png')} 
+                style={styles.eventThumb} 
+              />
+              <View style={styles.eventInfo}>
+                <View style={styles.eventMeta}>
+                  <View
+                    style={[
+                      styles.statusBadge,
+                      statusOf(ev) === 'Live'
+                        ? { backgroundColor: 'rgba(239, 68, 68, 0.1)' }
+                        : statusOf(ev) === 'Expired'
+                          ? { backgroundColor: 'rgba(100, 116, 139, 0.12)' }
+                          : { backgroundColor: 'rgba(56, 189, 248, 0.1)' },
+                    ]}
+                  >
+                    <Text style={[styles.statusText, statusOf(ev) === 'Live' ? { color: '#ef4444' } : statusOf(ev) === 'Expired' ? { color: '#64748b' } : { color: '#0ea5e9' }]}>
+                      {statusOf(ev) === 'Live' ? 'LIVE' : statusOf(ev) === 'Expired' ? 'EXPIRÉ' : 'À VENIR'}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.eventTitle} numberOfLines={2}>{ev.title}</Text>
+              </View>
+
+              <View style={{ justifyContent: 'center', alignItems: 'center', gap: 10, flexDirection: 'row' }}>
+                <TouchableOpacity onPress={() => navigation.navigate('CreateEvent', { event: ev })} style={{ padding: 6, backgroundColor: '#e0f2fe', borderRadius: 8 }}>
+                  <Ionicons name="pencil-outline" size={20} color="#0ea5e9" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDelete(ev.id)} style={{ padding: 6, backgroundColor: '#fee2e2', borderRadius: 8 }}>
+                  <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          ))
+        )}
       </ScrollView>
 
       {/* FAB */}
@@ -148,19 +182,11 @@ const styles = StyleSheet.create({
   mainStatHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
   mainStatLabel: { fontSize: FontSize.xs, fontWeight: FontWeight.bold, color: Colors.textMuted, letterSpacing: 1 },
   trendBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#dcfce7', paddingHorizontal: 10, paddingVertical: 4, borderRadius: BorderRadius.full },
-  trendText: { fontSize: FontSize.xs, fontWeight: FontWeight.bold, color: '#22c55e' },
   mainStatValue: { fontSize: FontSize.display, fontWeight: FontWeight.extrabold, color: Colors.primary, marginBottom: Spacing.md },
-  barChart: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 100, paddingTop: 10 },
-  barGroup: { alignItems: 'center', gap: 4, flex: 1 },
-  bar: { width: '60%', borderRadius: 6, backgroundColor: Colors.background, minHeight: 10 },
-  barActive: { backgroundColor: Colors.primary },
-  barLabel: { fontSize: 10, color: Colors.textMuted },
   statsRow: { flexDirection: 'row', gap: Spacing.md, marginBottom: Spacing.lg },
   statCard: { flex: 1, backgroundColor: Colors.white, borderRadius: BorderRadius.lg, padding: Spacing.md, ...Shadows.card },
   statLabel: { fontSize: FontSize.xs, fontWeight: FontWeight.bold, color: Colors.textMuted, letterSpacing: 1, marginBottom: 4 },
   statValue: { fontSize: FontSize.xxl, fontWeight: FontWeight.extrabold, color: Colors.primary },
-  statTrendRow: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 4 },
-  statTrend: { fontSize: FontSize.xs, fontWeight: FontWeight.semibold },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm },
   sectionTitle: { fontSize: FontSize.xl, fontWeight: FontWeight.extrabold, color: Colors.textPrimary },
   seeAll: { fontSize: FontSize.sm, color: Colors.textSecondary, fontWeight: FontWeight.medium },
@@ -175,5 +201,7 @@ const styles = StyleSheet.create({
   eventFooter: { flexDirection: 'row', gap: 12, flexWrap: 'wrap' },
   eventFooterItem: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   eventFooterText: { fontSize: FontSize.xs, color: Colors.textMuted },
+  emptyBox: { backgroundColor: Colors.white, borderRadius: BorderRadius.lg, padding: Spacing.md, ...Shadows.card, flexDirection: 'row', gap: 10, alignItems: 'center' },
+  emptyText: { color: Colors.textSecondary, fontWeight: FontWeight.medium },
   fab: { position: 'absolute', bottom: 88, right: Spacing.md, width: 56, height: 56, borderRadius: 99, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center', ...Shadows.button },
 });

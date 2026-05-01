@@ -158,17 +158,13 @@ export default function SignInScreen({ navigation }: any) {
           {/* Social */}
           <View style={styles.socialRow}>
             <TouchableOpacity 
-              style={styles.socialBtn} 
+              style={[styles.socialBtn, styles.socialBtnFull]} 
               activeOpacity={0.85}
               onPress={handleGoogleSignIn}
               disabled={!request || submitting}
             >
               <Ionicons name="logo-google" size={18} color={Colors.textPrimary} />
               <Text style={styles.socialText}>Google</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialBtn} activeOpacity={0.85}>
-              <Ionicons name="logo-apple" size={18} color={Colors.textPrimary} />
-              <Text style={styles.socialText}>Apple</Text>
             </TouchableOpacity>
           </View>
 
@@ -305,7 +301,7 @@ const styles = StyleSheet.create({
   },
   socialRow: {
     flexDirection: 'row',
-    gap: 12,
+    justifyContent: 'center',
   },
   socialBtn: {
     flex: 1,
@@ -318,6 +314,9 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.full,
     paddingVertical: 14,
     backgroundColor: Colors.white,
+  },
+  socialBtnFull: {
+    maxWidth: 420,
   },
   socialText: {
     fontSize: FontSize.sm,

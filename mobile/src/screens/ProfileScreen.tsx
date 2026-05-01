@@ -13,8 +13,16 @@ const SETTINGS = [
 ];
 
 export default function ProfileScreen({ navigation, route }: any) {
-  const { logout } = useAuth();
-  const userType = route.params?.userType || 'User';
+  const { logout, dbUser } = useAuth();
+  const isOrganizer = dbUser?.role === 'ORGANIZER' || dbUser?.role === 'ADMIN';
+  const displayName =
+    isOrganizer
+      ? (dbUser?.organizationName && String(dbUser.organizationName).trim().length > 0 ? dbUser.organizationName : 'Organisation')
+      : (dbUser?.name && String(dbUser.name).trim().length > 0 ? dbUser.name : 'Utilisateur');
+  const avatarSource =
+    dbUser?.avatar && typeof dbUser.avatar === 'string'
+      ? { uri: dbUser.avatar }
+      : require('../../assets/logo.jpeg');
 
   const handleSettingPress = (id: string, label: string) => {
     if (id === 'edit') {
@@ -50,27 +58,58 @@ export default function ProfileScreen({ navigation, route }: any) {
         <View style={styles.profileSection}>
           <View style={styles.avatarWrapper}>
             <Image 
-              source={require('../../assets/logo.jpeg')} 
+              source={avatarSource} 
               style={styles.avatarLarge} 
             />
             <View style={styles.verifiedBadge}>
               <Ionicons name="checkmark-circle" size={22} color="#8b5cf6" />
             </View>
           </View>
-          <Text style={styles.name}>{userType === 'Organizer' ? 'Organisateur EventHub' : 'Utilisateur'}</Text>
+          <Text style={styles.name}>{displayName}</Text>
           <Text style={styles.bio}>
-            {userType === 'Organizer' ? 'Organisateur officiel d\'événements tech au Togo.' : 'Passionné de tech et membre actif de la communauté EventHub.'}
+            {isOrganizer
+              ? "Organisateur officiel d'événements tech au Togo."
+              : 'Passionné de tech et membre actif de la communauté EventHub.'}
           </Text>
         </View>
 
-        {/* Stats */}
-        <View style={styles.statsRow}>
-          {[{ value: '24', label: 'INSCRIT' }, { value: '12', label: 'FAVORIS' }, { value: '3', label: 'ORGANISÉ' }].map((s, i) => (
-            <View key={i} style={styles.statItem}>
-              <Text style={styles.statValue}>{s.value}</Text>
-              <Text style={styles.statLabel}>{s.label}</Text>
-            </View>
-          ))}
+        {/* Stats Card */}
+        <View style={styles.statsCard}>
+          {isOrganizer ? (
+            <>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{dbUser?._count?.followers || 0}</Text>
+                <Text style={styles.statLabel}>Abonnés</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{dbUser?._count?.following || 0}</Text>
+                <Text style={styles.statLabel}>Suivis</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{dbUser?._count?.favorites || 0}</Text>
+                <Text style={styles.statLabel}>Favoris</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{dbUser?._count?.organizedEvents || 0}</Text>
+                <Text style={styles.statLabel}>Événements</Text>
+              </View>
+            </>
+          ) : (
+            <>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{dbUser?._count?.favorites || 0}</Text>
+                <Text style={styles.statLabel}>Favoris</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{dbUser?._count?.following || 0}</Text>
+                <Text style={styles.statLabel}>Suivis</Text>
+              </View>
+            </>
+          )}
         </View>
 
         {/* Settings */}
@@ -107,19 +146,6 @@ export default function ProfileScreen({ navigation, route }: any) {
           <Ionicons name="log-out-outline" size={20} color={Colors.textPrimary} />
           <Text style={styles.logoutText}>DÉCONNEXION</Text>
         </TouchableOpacity>
-
-        {/* Featured event card */}
-        <View style={styles.featuredCard}>
-          <Image source={require('../../assets/onboarding1.png')} style={styles.featuredImg} resizeMode="cover" />
-          <View style={styles.featuredOverlay} />
-          <View style={styles.featuredContent}>
-            <View style={styles.featuredTag}>
-              <Text style={styles.featuredTagText}>À VENIR</Text>
-            </View>
-            <Text style={styles.featuredTitle}>Lomé Tech Summit 2026</Text>
-            <Text style={styles.featuredMeta}>12 Oct • Palais des Congrès</Text>
-          </View>
-        </View>
       </ScrollView>
     </View>
   );
@@ -148,11 +174,21 @@ const styles = StyleSheet.create({
   },
   name: { fontSize: FontSize.xxl, fontWeight: FontWeight.extrabold, color: Colors.primary },
   bio: { fontSize: FontSize.sm, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20, paddingHorizontal: Spacing.md },
-  statsRow: { flexDirection: 'row', backgroundColor: Colors.white, borderRadius: BorderRadius.xl, padding: Spacing.md, marginBottom: Spacing.lg, ...Shadows.card },
-  statItem: { flex: 1, alignItems: 'center', gap: 4 },
-  statValue: { fontSize: FontSize.xxl, fontWeight: FontWeight.extrabold, color: Colors.primary },
-  statLabel: { fontSize: FontSize.xs, fontWeight: FontWeight.bold, color: Colors.textMuted, letterSpacing: 0.5 },
   sectionLabel: { fontSize: FontSize.xs, fontWeight: FontWeight.bold, color: Colors.textMuted, letterSpacing: 1.5, marginBottom: Spacing.sm },
+  statsCard: {
+    flexDirection: 'row',
+    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.xl,
+    paddingVertical: 18,
+    marginBottom: Spacing.lg,
+    ...Shadows.card,
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
+  },
+  statItem: { alignItems: 'center', flex: 1 },
+  statValue: { fontSize: FontSize.lg, fontWeight: FontWeight.extrabold, color: Colors.primary, marginBottom: 4 },
+  statLabel: { fontSize: 11, color: Colors.textMuted, fontWeight: 'bold', textTransform: 'uppercase' },
+  statDivider: { width: 1, height: '70%', backgroundColor: Colors.border },
   settingsCard: { backgroundColor: Colors.white, borderRadius: BorderRadius.xl, marginBottom: Spacing.md, overflow: 'hidden', ...Shadows.card },
   settingRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: Spacing.md },
   settingBorder: { borderBottomWidth: 1, borderBottomColor: Colors.border },
@@ -164,12 +200,4 @@ const styles = StyleSheet.create({
     paddingVertical: 16, marginBottom: Spacing.lg, ...Shadows.card,
   },
   logoutText: { fontSize: FontSize.sm, fontWeight: FontWeight.bold, color: Colors.textPrimary, letterSpacing: 1 },
-  featuredCard: { borderRadius: BorderRadius.xl, overflow: 'hidden', height: 160, position: 'relative' },
-  featuredImg: { width: '100%', height: '100%' },
-  featuredOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(3,4,94,0.55)' },
-  featuredContent: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: Spacing.md, gap: 4 },
-  featuredTag: { alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.25)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: BorderRadius.full, borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)' },
-  featuredTagText: { fontSize: FontSize.xs, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 0.8 },
-  featuredTitle: { fontSize: FontSize.xl, fontWeight: FontWeight.extrabold, color: Colors.white },
-  featuredMeta: { fontSize: FontSize.sm, color: 'rgba(255,255,255,0.8)' },
 });

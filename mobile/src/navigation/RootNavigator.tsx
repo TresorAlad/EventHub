@@ -8,6 +8,8 @@ import SignInScreen from '../screens/SignInScreen';
 import SignUpScreen from '../screens/SignUpScreen';
 import EventDetailsScreen from '../screens/EventDetailsScreen';
 import CreateEventScreen from '../screens/CreateEventScreen';
+import EditEventScreen from '../screens/EditEventScreen';
+import OrganizerEventDashboardScreen from '../screens/OrganizerEventDashboardScreen';
 import MainTabNavigator from './MainTabNavigator';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import SearchScreen from '../screens/SearchScreen';
@@ -56,6 +58,16 @@ export default function RootNavigator() {
             name="CreateEvent"
             component={CreateEventScreen}
             options={{ presentation: 'modal' }}
+          />
+          <Stack.Screen
+            name="EditEvent"
+            component={EditEventScreen}
+            options={{ presentation: 'modal' }}
+          />
+          <Stack.Screen
+            name="OrganizerEventDashboard"
+            component={OrganizerEventDashboardScreen}
+            options={{ presentation: 'card' }}
           />
           <Stack.Screen name="EditProfile" component={EditProfileScreen} />
           <Stack.Screen name="Search" component={SearchScreen} />

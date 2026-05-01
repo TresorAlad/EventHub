@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
   TouchableOpacity, StatusBar, TextInput,
@@ -6,15 +6,108 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows, Fonts } from '../theme';
+import { useAuth } from '../hooks/useAuth';
+import { auth } from '../config/firebase';
+import { updateEmail } from 'firebase/auth';
+import * as ImagePicker from 'expo-image-picker';
+import { updateProfile as updateProfileApi, uploadAvatar } from '../services/api';
 
 export default function EditProfileScreen({ navigation }: any) {
-  const [name, setName] = useState('Farida Mensah');
-  const [email, setEmail] = useState('farida.m@example.com');
-  const [bio, setBio] = useState('Passionnée de tech et membre active de la communauté EventHub.');
+  const { dbUser, refreshUser } = useAuth();
+  const isOrganizer = dbUser?.role === 'ORGANIZER' || dbUser?.role === 'ADMIN';
 
-  const handleSave = () => {
-    Alert.alert('Succès', 'Profil mis à jour avec succès !');
-    navigation.goBack();
+  const [organizerName, setOrganizerName] = useState('');
+  const [organizationName, setOrganizationName] = useState('');
+  const [userName, setUserName] = useState('');
+  const [email, setEmail] = useState('');
+  const [bio, setBio] = useState('');
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!dbUser) return;
+    const n = typeof dbUser.name === 'string' ? dbUser.name : '';
+    setOrganizerName(n);
+    setUserName(n);
+    setOrganizationName(typeof dbUser.organizationName === 'string' ? dbUser.organizationName : '');
+    setBio(typeof dbUser.bio === 'string' ? dbUser.bio : '');
+    setAvatarUri(typeof dbUser.avatar === 'string' ? dbUser.avatar : null);
+    setEmail(auth.currentUser?.email || dbUser.email || '');
+  }, [dbUser]);
+
+  const avatarSource = useMemo(() => {
+    if (avatarUri && (avatarUri.startsWith('http') || avatarUri.startsWith('file:'))) return { uri: avatarUri };
+    return require('../../assets/logo.jpeg');
+  }, [avatarUri]);
+
+  const pickAvatar = async () => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert('Permission', 'Autorise l’accès à tes photos pour changer ton avatar.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (!result.canceled) setAvatarUri(result.assets[0].uri);
+  };
+
+  const handleSave = async () => {
+    if (!auth.currentUser) return;
+    setSaving(true);
+    try {
+      const nextEmail = email.trim();
+      const currentEmail = auth.currentUser.email || '';
+      if (nextEmail && nextEmail !== currentEmail) {
+        await updateEmail(auth.currentUser, nextEmail);
+      }
+
+      let avatarUrlToSave: string | undefined;
+      if (avatarUri && avatarUri.startsWith('file:')) {
+        const filename = avatarUri.split('/').pop() || 'avatar.jpg';
+        const ext = (filename.split('.').pop() || 'jpg').toLowerCase();
+        const type = ext === 'png' ? 'image/png' : 'image/jpeg';
+        const updated = await uploadAvatar({ uri: avatarUri, name: filename, type });
+        if (updated?.avatar && typeof updated.avatar === 'string') {
+          avatarUrlToSave = updated.avatar;
+          setAvatarUri(updated.avatar);
+        } else if (updated?.data?.avatar && typeof updated.data.avatar === 'string') {
+          avatarUrlToSave = updated.data.avatar;
+          setAvatarUri(updated.data.avatar);
+        } else if (updated?.avatarUrl && typeof updated.avatarUrl === 'string') {
+          avatarUrlToSave = updated.avatarUrl;
+          setAvatarUri(updated.avatarUrl);
+        }
+      }
+
+      const payload: any = {
+        email: nextEmail || undefined,
+        bio: bio || undefined,
+        avatar: avatarUrlToSave || (avatarUri && avatarUri.startsWith('http') ? avatarUri : undefined),
+      };
+      if (isOrganizer) {
+        payload.name = organizerName || undefined;
+        payload.organizationName = organizationName || undefined;
+      } else {
+        payload.name = userName || undefined;
+      }
+
+      await updateProfileApi(payload);
+      await refreshUser();
+      Alert.alert('Succès', 'Profil mis à jour avec succès !');
+      navigation.goBack();
+    } catch (e: any) {
+      const msg =
+        e?.code === 'auth/requires-recent-login'
+          ? "Pour modifier l'email, reconnecte-toi puis réessaie."
+          : e?.response?.data?.message || e?.message || 'Impossible de sauvegarder le profil.';
+      Alert.alert('Erreur', msg);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -27,8 +120,8 @@ export default function EditProfileScreen({ navigation }: any) {
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Edit Profile</Text>
-        <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-          <Text style={styles.saveBtnText}>Save</Text>
+        <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={saving} activeOpacity={0.9}>
+          <Text style={styles.saveBtnText}>{saving ? '...' : 'Save'}</Text>
         </TouchableOpacity>
       </View>
 
@@ -41,10 +134,10 @@ export default function EditProfileScreen({ navigation }: any) {
           <View style={styles.avatarSection}>
             <View style={styles.avatarWrapper}>
               <Image 
-                source={require('../../assets/logo.jpeg')} 
+                source={avatarSource} 
                 style={styles.avatar} 
               />
-              <TouchableOpacity style={styles.editBadge}>
+              <TouchableOpacity style={styles.editBadge} onPress={pickAvatar} activeOpacity={0.85}>
                 <Ionicons name="camera" size={20} color={Colors.white} />
               </TouchableOpacity>
             </View>
@@ -54,20 +147,35 @@ export default function EditProfileScreen({ navigation }: any) {
           {/* Form */}
           <View style={styles.form}>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>FULL NAME</Text>
+              <Text style={styles.label}>{isOrganizer ? "NOM DE L'ORGANISATEUR" : 'NOM COMPLET'}</Text>
               <View style={styles.inputWrapper}>
                 <Ionicons name="person-outline" size={20} color={Colors.textMuted} style={styles.inputIcon} />
                 <TextInput 
                   style={styles.input}
-                  value={name}
-                  onChangeText={setName}
-                  placeholder="Enter your name"
+                  value={isOrganizer ? organizerName : userName}
+                  onChangeText={isOrganizer ? setOrganizerName : setUserName}
+                  placeholder={isOrganizer ? "Ex: Kossi Jerico" : "Ex: Kodjo Mensah"}
                 />
               </View>
             </View>
 
+            {isOrganizer && (
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>NOM DE L'ORGANISATION</Text>
+                <View style={styles.inputWrapper}>
+                  <Ionicons name="business-outline" size={20} color={Colors.textMuted} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    value={organizationName}
+                    onChangeText={setOrganizationName}
+                    placeholder="Ex: Lomé Tech Hub"
+                  />
+                </View>
+              </View>
+            )}
+
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>EMAIL ADDRESS</Text>
+              <Text style={styles.label}>EMAIL</Text>
               <View style={styles.inputWrapper}>
                 <Ionicons name="mail-outline" size={20} color={Colors.textMuted} style={styles.inputIcon} />
                 <TextInput 
@@ -76,6 +184,7 @@ export default function EditProfileScreen({ navigation }: any) {
                   onChangeText={setEmail}
                   placeholder="Enter your email"
                   keyboardType="email-address"
+                  autoCapitalize="none"
                 />
               </View>
             </View>

@@ -1,6 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import api from '../services/api';
 import { useEffect } from 'react';
 
@@ -32,6 +33,24 @@ export const useNotifications = (user: any) => {
 async function registerForPushNotificationsAsync() {
   let token: string | undefined;
 
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('default', {
+      name: 'EventHub Notifications',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#03045e',
+    });
+  }
+
+  // Depuis Expo Go (SDK 53+), les push notifications distantes via expo-notifications
+  // ne sont plus supportées. Il faut un dev build (expo-dev-client) pour récupérer un push token.
+  if (Constants.appOwnership === 'expo') {
+    console.warn(
+      "Expo Go détecté: récupération du push token désactivée. Utilise un dev build (`npm run start:dev-client`) pour tester les push notifications."
+    );
+    return undefined;
+  }
+
   if (Device.isDevice) {
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
@@ -55,15 +74,6 @@ async function registerForPushNotificationsAsync() {
     }
   } else {
     console.log('Les notifications push nécessitent un appareil physique.');
-  }
-
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
-      name: 'EventHub Notifications',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#03045e',
-    });
   }
 
   return token;

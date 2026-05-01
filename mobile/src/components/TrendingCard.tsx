@@ -15,6 +15,7 @@ interface TrendingCardProps {
 }
 
 export default function TrendingCard({ category, title, subtitle, date, time, image, status, onPress }: TrendingCardProps) {
+  const isExpired = status === 'Expired' || status === 'Past';
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.92}>
       <ImageBackground source={image} style={styles.image} imageStyle={styles.imageStyle}>
@@ -25,8 +26,8 @@ export default function TrendingCard({ category, title, subtitle, date, time, im
               <Text style={styles.tagText}>{category}</Text>
             </View>
             {status && (
-              <View style={[styles.statusBadge, status === 'Live' ? styles.statusLive : styles.statusUpcoming]}>
-                <Text style={styles.statusText}>{status === 'Live' ? 'LIVE' : 'À VENIR'}</Text>
+              <View style={[styles.statusBadge, status === 'Live' ? styles.statusLive : isExpired ? styles.statusExpired : styles.statusUpcoming]}>
+                <Text style={styles.statusText}>{status === 'Live' ? 'LIVE' : isExpired ? 'EXPIRÉ' : 'À VENIR'}</Text>
               </View>
             )}
           </View>
@@ -135,6 +136,10 @@ const styles = StyleSheet.create({
   statusUpcoming: {
     backgroundColor: 'rgba(56, 189, 248, 0.4)',
     borderColor: 'rgba(56, 189, 248, 0.6)',
+  },
+  statusExpired: {
+    backgroundColor: 'rgba(100, 116, 139, 0.35)',
+    borderColor: 'rgba(100, 116, 139, 0.55)',
   },
   statusText: {
     fontSize: 10,

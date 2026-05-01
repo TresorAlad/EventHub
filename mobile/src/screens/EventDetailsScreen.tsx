@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
   TouchableOpacity, Image, StatusBar, Alert, Linking,
@@ -6,6 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
 import { useAuth } from '../hooks/useAuth';
+import { getEventInteractions, registerToEvent, toggleFavorite, toggleFollowOrganizer, unregisterFromEvent } from '../services/api';
 
 export default function EventDetailsScreen({ navigation, route }: any) {
   const { dbUser, user } = useAuth();
@@ -21,8 +22,39 @@ export default function EventDetailsScreen({ navigation, route }: any) {
   const orgName = event.organizer?.name || event.organizer || 'Communauté Tech';
   const orgAvatar = event.organizer?.avatar ? { uri: event.organizer.avatar } : require('../../assets/logo.jpeg');
   const eventDate = event.date ? new Date(event.date) : new Date();
+  const eventExpired = useMemo(() => {
+    const now = new Date();
+    const start = event.date ? new Date(event.date) : now;
+    const end = event.endDate ? new Date(event.endDate) : null;
+    if (end) return now > end;
+    return now > start;
+  }, [event.date, event.endDate]);
 
-  const handleRegister = () => {
+  const [registered, setRegistered] = useState(false);
+  const [favorited, setFavorited] = useState(false);
+  const [following, setFollowing] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      if (!event?.id) return;
+      try {
+        const s = await getEventInteractions(event.id);
+        if (!mounted) return;
+        setRegistered(Boolean(s?.registered));
+        setFavorited(Boolean(s?.favorited));
+        setFollowing(Boolean(s?.followingOrganizer));
+      } catch (e) {
+        // non-blocking
+      }
+    };
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, [event?.id]);
+
+  const handleRegister = async () => {
     if (isExternal) {
       Alert.alert(
         'Redirection',
@@ -33,12 +65,33 @@ export default function EventDetailsScreen({ navigation, route }: any) {
         ]
       );
     } else {
+      if (eventExpired) {
+        Alert.alert('Événement expiré', "Les inscriptions sont fermées pour cet événement.");
+        return;
+      }
       Alert.alert(
         'Confirmation',
         'Voulez-vous valider votre participation automatiquement avec les informations de votre profil ?',
         [
           { text: 'Annuler', style: 'cancel' },
-          { text: 'Confirmer', onPress: () => Alert.alert('Succès', "Votre inscription a été validée avec succès dans l'application !") }
+          {
+            text: registered ? "Se désinscrire" : 'Confirmer',
+            onPress: async () => {
+              try {
+                if (registered) {
+                  await unregisterFromEvent(event.id);
+                  setRegistered(false);
+                  Alert.alert('OK', "Vous êtes désinscrit.");
+                } else {
+                  await registerToEvent(event.id);
+                  setRegistered(true);
+                  Alert.alert('Succès', "Votre inscription a été validée.");
+                }
+              } catch (e: any) {
+                Alert.alert('Erreur', e?.response?.data?.message || "Impossible de finaliser l'inscription.");
+              }
+            },
+          },
         ]
       );
     }
@@ -86,8 +139,20 @@ export default function EventDetailsScreen({ navigation, route }: any) {
               <Text style={styles.orgName}>{orgName}</Text>
             </View>
             {!isOrganizer && (
-              <TouchableOpacity style={styles.followBtn} onPress={() => Alert.alert('Suivre', 'Vous suivez maintenant cet organisateur !')}>
-                <Text style={styles.followText}>Suivre</Text>
+              <TouchableOpacity
+                style={[styles.followBtn, following && { backgroundColor: Colors.primary }]}
+                onPress={async () => {
+                  try {
+                    const organizerId = event.organizerId || event.organizer?.id;
+                    if (!organizerId) return;
+                    const r = await toggleFollowOrganizer(String(organizerId));
+                    setFollowing(Boolean(r?.following));
+                  } catch (e: any) {
+                    Alert.alert('Erreur', e?.response?.data?.message || "Impossible d'effectuer l'action.");
+                  }
+                }}
+              >
+                <Text style={[styles.followText, following && { color: Colors.white }]}>{following ? 'Suivi' : 'Suivre'}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -165,8 +230,18 @@ export default function EventDetailsScreen({ navigation, route }: any) {
       </ScrollView>
 
       <View style={styles.bottomBar}>
-        <TouchableOpacity style={styles.bookmarkBtn} onPress={() => Alert.alert('Favoris', 'Événement ajouté à vos favoris !')}>
-          <Ionicons name="bookmark-outline" size={22} color={Colors.textPrimary} />
+        <TouchableOpacity
+          style={styles.bookmarkBtn}
+          onPress={async () => {
+            try {
+              const r = await toggleFavorite(event.id);
+              setFavorited(Boolean(r?.favorited));
+            } catch (e: any) {
+              Alert.alert('Erreur', e?.response?.data?.message || "Impossible de modifier les favoris.");
+            }
+          }}
+        >
+          <Ionicons name={favorited ? 'bookmark' : 'bookmark-outline'} size={22} color={Colors.textPrimary} />
         </TouchableOpacity>
         
         {isOrganizer ? (
@@ -177,9 +252,9 @@ export default function EventDetailsScreen({ navigation, route }: any) {
             <Text style={styles.registerText}>Suivre les inscrits ({event.attendees || 0})</Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity style={styles.registerBtn} onPress={handleRegister}>
+          <TouchableOpacity style={[styles.registerBtn, eventExpired && { backgroundColor: '#94a3b8' }]} onPress={handleRegister}>
             <Text style={styles.registerText}>
-              {isExternal ? "S'inscrire (Externe)" : "S'inscrire Maintenant"}
+              {eventExpired ? 'Expiré' : registered ? 'Déjà inscrit' : isExternal ? "S'inscrire (Externe)" : "S'inscrire Maintenant"}
             </Text>
           </TouchableOpacity>
         )}
