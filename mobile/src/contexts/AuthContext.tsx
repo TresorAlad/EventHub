@@ -8,13 +8,9 @@ import React, {
   useState,
 } from 'react';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { auth } from '../config/firebase';
-import { syncUserWithBackend, syncUserWithBackendWithRole } from '../services/api';
+import { syncUserWithBackend } from '../services/api';
 import { clearCachedIdToken, getCachedIdToken } from '../lib/firebaseToken';
-
-const SIGNUP_ROLE_KEY = 'eventhub:signupDesiredRole';
-const SIGNUP_ORG_NAME_KEY = 'eventhub:signupOrganizationName';
 
 export type DbUser = {
   id?: string;
@@ -65,18 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Force refresh du token pour récupérer les claims les plus récents.
         await getCachedIdToken(true);
 
-        const desiredRole = await AsyncStorage.getItem(SIGNUP_ROLE_KEY);
-        const orgName = await AsyncStorage.getItem(SIGNUP_ORG_NAME_KEY);
-
-        const synced =
-          desiredRole === 'ORGANIZER'
-            ? await syncUserWithBackendWithRole('ORGANIZER', orgName || undefined)
-            : await syncUserWithBackend();
-
-        if (desiredRole === 'ORGANIZER') {
-          await AsyncStorage.removeItem(SIGNUP_ROLE_KEY);
-          await AsyncStorage.removeItem(SIGNUP_ORG_NAME_KEY);
-        }
+        const synced = await syncUserWithBackend();
 
         lastSyncedUid.current = firebaseUser.uid;
         return synced as DbUser;

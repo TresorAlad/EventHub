@@ -70,12 +70,6 @@ export const syncUserWithBackend = async () => {
   return unwrap(response.data);
 };
 
-export const syncUserWithBackendWithRole = async (desiredRole?: 'ORGANIZER', organizationName?: string) => {
-  const body = desiredRole ? { desiredRole, organizationName } : undefined;
-  const response = await api.post('/auth/sync', body);
-  return unwrap(response.data);
-};
-
 export const getEvents = async () => {
   const response = await api.get('/events');
   return unwrap(response.data);

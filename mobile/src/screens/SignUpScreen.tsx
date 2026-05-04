@@ -10,22 +10,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   TextInput,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../config/firebase';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAppAlert } from '../contexts/AppAlertContext';
-
-type UserType = 'User' | 'Organizer' | null;
-const SIGNUP_ROLE_KEY = 'eventhub:signupDesiredRole';
-const SIGNUP_ORG_NAME_KEY = 'eventhub:signupOrganizationName';
 
 export default function SignUpScreen({ navigation }: any) {
   const { showAlert } = useAppAlert();
-  const [userType, setUserType] = useState<UserType>(null);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,10 +26,6 @@ export default function SignUpScreen({ navigation }: any) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  
-  // Organizer specific
-  const [orgName, setOrgName] = useState('');
-  const [orgWebsite, setOrgWebsite] = useState('');
 
   const handleSignUp = async () => {
     if (!fullName || !email || !password) {
@@ -69,17 +58,6 @@ export default function SignUpScreen({ navigation }: any) {
       const credential = await createUserWithEmailAndPassword(auth, email.trim(), password);
       // Firebase displayName = nom de la personne. Le nom de l'organisation est stocké côté backend.
       await updateProfile(credential.user, { displayName: fullName.trim() });
-
-      // Persist the desired role for the first backend sync after login.
-      if (userType === 'Organizer') {
-        await AsyncStorage.setItem(SIGNUP_ROLE_KEY, 'ORGANIZER');
-        if (orgName.trim().length > 0) {
-          await AsyncStorage.setItem(SIGNUP_ORG_NAME_KEY, orgName.trim());
-        }
-      } else {
-        await AsyncStorage.removeItem(SIGNUP_ROLE_KEY);
-        await AsyncStorage.removeItem(SIGNUP_ORG_NAME_KEY);
-      }
     } catch (error: any) {
       console.error(error);
       showAlert({
@@ -92,68 +70,12 @@ export default function SignUpScreen({ navigation }: any) {
     }
   };
 
-  if (!userType) {
-    return (
-      <View style={[styles.container, { backgroundColor: '#e0f2fe' }]}>
-        <StatusBar barStyle="dark-content" backgroundColor="#e0f2fe" />
-        
-        <View style={styles.choiceHeader}>
-          <Text style={styles.newChoiceTitle}>Join EventHub</Text>
-          <Text style={styles.newChoiceSubtitle}>Choose how you want to use the platform</Text>
-        </View>
-
-        <View style={styles.choicesWrapper}>
-          <TouchableOpacity 
-            style={styles.horizontalCard} 
-            onPress={() => setUserType('User')}
-            activeOpacity={0.9}
-          >
-            <View style={[styles.hIconBox, { backgroundColor: '#cffafe' }]}>
-              <Ionicons name="person-outline" size={30} color="#03045e" />
-            </View>
-            <View style={styles.hContent}>
-              <Text style={styles.hTitle}>Simple User</Text>
-              <Text style={styles.hDesc}>Discover events, book tickets, and follow your favorite tech communities.</Text>
-            </View>
-            <View style={[styles.hArrow, { backgroundColor: '#03045e' }]}>
-              <Ionicons name="chevron-forward" size={18} color="#fff" />
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={[styles.horizontalCard, { backgroundColor: '#03045e' }]} 
-            onPress={() => setUserType('Organizer')}
-            activeOpacity={0.9}
-          >
-            <View style={[styles.hIconBox, { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
-              <Ionicons name="calendar-outline" size={30} color="#fff" />
-            </View>
-            <View style={styles.hContent}>
-              <Text style={[styles.hTitle, { color: '#fff' }]}>Organizer</Text>
-              <Text style={[styles.hDesc, { color: 'rgba(255,255,255,0.7)' }]}>Create events, manage participants, and track your success with powerful dashboards.</Text>
-            </View>
-            <View style={[styles.hArrow, { backgroundColor: '#fff' }]}>
-              <Ionicons name="chevron-forward" size={18} color="#03045e" />
-            </View>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.bottomLinkContainer}>
-          <Text style={styles.bottomText}>Already have an account? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('SignIn')}>
-            <Text style={styles.bottomLink}>Sign In</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
-
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
 
-        <TouchableOpacity style={styles.backBtn} onPress={() => setUserType(null)}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
 
@@ -163,9 +85,7 @@ export default function SignUpScreen({ navigation }: any) {
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Détails de compte</Text>
-          <Text style={styles.cardSubtitle}>
-            {userType === 'User' ? 'Compte Utilisateur' : 'Compte Organisateur'}
-          </Text>
+          <Text style={styles.cardSubtitle}>Compte Utilisateur</Text>
 
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Nom complet</Text>
@@ -194,35 +114,6 @@ export default function SignUpScreen({ navigation }: any) {
               />
             </View>
           </View>
-
-          {userType === 'Organizer' && (
-            <>
-              <View style={styles.fieldGroup}>
-                <Text style={styles.label}>Nom de l'organisation</Text>
-                <View style={styles.inputBox}>
-                  <Ionicons name="business-outline" size={20} color={Colors.textMuted} />
-                  <TextInput 
-                    style={styles.inputText} 
-                    placeholder="Ex: Lomé Tech Hub"
-                    value={orgName}
-                    onChangeText={setOrgName}
-                  />
-                </View>
-              </View>
-              <View style={styles.fieldGroup}>
-                <Text style={styles.label}>Site Web (Optionnel)</Text>
-                <View style={styles.inputBox}>
-                  <Ionicons name="globe-outline" size={20} color={Colors.textMuted} />
-                  <TextInput 
-                    style={styles.inputText} 
-                    placeholder="https://votre-site.tg"
-                    value={orgWebsite}
-                    onChangeText={setOrgWebsite}
-                  />
-                </View>
-              </View>
-            </>
-          )}
 
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Mot de passe</Text>
