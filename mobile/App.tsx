@@ -84,13 +84,11 @@ function Bootstrap() {
     }
   }, [fontsLoaded, fontError]);
 
-  if (!fontsLoaded && !fontError) {
-    return null;
-  }
-
   useEffect(() => {
     const run = async () => {
       try {
+        // Évite de checker des updates avant que le bootstrap UI soit prêt.
+        if (!fontsLoaded && !fontError) return;
         // En dev (Expo Go), `expo-updates` ne sert pas. En build, on notifie.
         if (__DEV__) return;
         const update = await Updates.checkForUpdateAsync();
@@ -111,7 +109,11 @@ function Bootstrap() {
       }
     };
     run();
-  }, [showAlert]);
+  }, [showAlert, fontsLoaded, fontError]);
+
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
 
   return (
     <AuthProvider>
