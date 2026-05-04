@@ -9,12 +9,16 @@ import {
   StatusBar,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import AppIcon from '../components/ui/AppIcon';
-import { BorderRadius, Colors, FontSize, FontWeight, Shadows, Spacing } from '../theme';
+import { BorderRadius, Colors, FontSize, FontWeight, Shadows, Spacing, Fonts } from '../theme';
 import { useAuth } from '../hooks/useAuth';
 import { getMyOrganizerRequest, submitOrganizerRequest } from '../services/api';
 import { useAppAlert } from '../contexts/AppAlertContext';
+
+const { width } = Dimensions.get('window');
 
 export default function OrganizerRequestScreen({ navigation }: any) {
   const { dbUser, refreshUser } = useAuth();
@@ -29,6 +33,9 @@ export default function OrganizerRequestScreen({ navigation }: any) {
   const [phone, setPhone] = useState('');
   const [website, setWebsite] = useState('');
   const [proofUrl, setProofUrl] = useState('');
+
+  // Pour gérer l'état de focus des champs
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const role = dbUser?.role || 'USER';
   const alreadyOrganizer = role === 'ORGANIZER' || role === 'ADMIN';
@@ -109,188 +116,387 @@ export default function OrganizerRequestScreen({ navigation }: any) {
     }
   };
 
+  const renderInput = (
+    label: string,
+    value: string,
+    onChangeText: (text: string) => void,
+    placeholder: string,
+    icon: string,
+    id: string,
+    props: any = {}
+  ) => {
+    const isFocused = focusedField === id;
+    const isMultiline = props.multiline;
+
+    return (
+      <View style={styles.field}>
+        <Text style={styles.label}>{label}</Text>
+        <View
+          style={[
+            styles.inputContainer,
+            isFocused && styles.inputContainerFocused,
+            isMultiline && styles.inputContainerMultiline,
+          ]}
+        >
+          <View style={[styles.iconWrapper, isMultiline && { marginTop: 12 }]}>
+            <AppIcon
+              name={icon as any}
+              size={20}
+              color={isFocused ? Colors.primary : Colors.textMuted}
+            />
+          </View>
+          <TextInput
+            style={[styles.input, isMultiline && styles.inputMultiline]}
+            value={value}
+            onChangeText={onChangeText}
+            placeholder={placeholder}
+            placeholderTextColor="#A0AEC0"
+            onFocus={() => setFocusedField(id)}
+            onBlur={() => setFocusedField(null)}
+            {...props}
+          />
+        </View>
+      </View>
+    );
+  };
+
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
+      <LinearGradient
+        colors={[Colors.background, Colors.white]}
+        style={styles.container}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 0.5 }}
+      >
+        <StatusBar barStyle="dark-content" />
 
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.9}>
-            <AppIcon name="arrow-back" size={22} color={Colors.primary} />
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <AppIcon name="chevron-back" size={24} color={Colors.primary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Demande Organisateur</Text>
+          <Text style={styles.headerTitle}>Devenir Organisateur</Text>
           <View style={{ width: 44 }} />
         </View>
 
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          <View style={styles.card}>
-            <Text style={styles.title}>Devenir Organisateur</Text>
-            <Text style={styles.subtitle}>
-              Remplissez ces informations. L’administrateur pourra les consulter avant d’accepter votre demande.
-            </Text>
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.content}>
+            <View style={styles.introSection}>
+              <View style={styles.iconCircle}>
+                <AppIcon name="briefcase" size={32} color={Colors.white} />
+              </View>
+              <Text style={styles.title}>Rejoignez la communauté</Text>
+              <Text style={styles.subtitle}>
+                Remplissez ces informations pour que l'administrateur puisse valider votre profil d'organisateur.
+              </Text>
+            </View>
 
             {alreadyOrganizer ? (
-              <View style={styles.badgeRow}>
-                <View style={[styles.badge, { backgroundColor: 'rgba(16,185,129,0.12)' }]}>
-                  <Text style={[styles.badgeText, { color: '#10b981' }]}>Vous êtes déjà ORGANIZER</Text>
-                </View>
+              <View style={styles.statusBox}>
+                <LinearGradient
+                  colors={['rgba(16,185,129,0.1)', 'rgba(16,185,129,0.05)']}
+                  style={styles.statusGradient}
+                >
+                  <AppIcon name="checkmark-circle" size={20} color="#10b981" />
+                  <Text style={[styles.statusText, { color: '#10b981' }]}>
+                    Vous êtes déjà organisateur
+                  </Text>
+                </LinearGradient>
               </View>
             ) : statusLabel ? (
-              <View style={styles.badgeRow}>
-                <View style={[styles.badge, { backgroundColor: statusLabel.bg }]}>
-                  <Text style={[styles.badgeText, { color: statusLabel.color }]}>{statusLabel.text}</Text>
-                </View>
+              <View style={styles.statusBox}>
+                <LinearGradient
+                  colors={[statusLabel.bg, 'rgba(255,255,255,0.05)']}
+                  style={styles.statusGradient}
+                >
+                  <AppIcon
+                    name={
+                      existing?.status === 'APPROVED'
+                        ? 'checkmark-circle'
+                        : existing?.status === 'REJECTED'
+                        ? 'close-circle'
+                        : 'time'
+                    }
+                    size={20}
+                    color={statusLabel.color}
+                  />
+                  <Text style={[styles.statusText, { color: statusLabel.color }]}>
+                    Statut : {statusLabel.text}
+                  </Text>
+                </LinearGradient>
               </View>
             ) : null}
 
-            <View style={styles.field}>
-              <Text style={styles.label}>Nom de la communauté</Text>
-              <View style={styles.inputBox}>
-                <AppIcon name="people-outline" size={18} color={Colors.textMuted} />
-                <TextInput
-                  style={styles.input}
-                  value={communityName}
-                  onChangeText={setCommunityName}
-                  placeholder="Ex: GDG Lomé"
-                />
-              </View>
-            </View>
+            <View style={styles.formCard}>
+              {renderInput(
+                'Nom de la communauté',
+                communityName,
+                setCommunityName,
+                'Ex: GDG Lomé, Club Informatique...',
+                'people-outline',
+                'name'
+              )}
 
-            <View style={styles.field}>
-              <Text style={styles.label}>Description</Text>
-              <View style={[styles.inputBox, { alignItems: 'flex-start' }]}>
-                <AppIcon name="document-text-outline" size={18} color={Colors.textMuted} style={{ marginTop: 3 }} />
-                <TextInput
-                  style={[styles.input, { minHeight: 110 }]}
-                  value={description}
-                  onChangeText={setDescription}
-                  placeholder="Présentez votre communauté, vos événements passés, etc."
-                  multiline
-                  textAlignVertical="top"
-                />
-              </View>
-            </View>
-
-            <View style={styles.field}>
-              <Text style={styles.label}>Téléphone</Text>
-              <View style={styles.inputBox}>
-                <AppIcon name="call-outline" size={18} color={Colors.textMuted} />
-                <TextInput
-                  style={styles.input}
-                  value={phone}
-                  onChangeText={setPhone}
-                  placeholder="Ex: +228 90 00 00 00"
-                  keyboardType="phone-pad"
-                />
-              </View>
-            </View>
-
-            <View style={styles.field}>
-              <Text style={styles.label}>Site web (optionnel)</Text>
-              <View style={styles.inputBox}>
-                <AppIcon name="globe-outline" size={18} color={Colors.textMuted} />
-                <TextInput
-                  style={styles.input}
-                  value={website}
-                  onChangeText={setWebsite}
-                  placeholder="https://..."
-                  autoCapitalize="none"
-                />
-              </View>
-            </View>
-
-            <View style={styles.field}>
-              <Text style={styles.label}>Document / lien preuve (optionnel)</Text>
-              <View style={styles.inputBox}>
-                <AppIcon name="link-outline" size={18} color={Colors.textMuted} />
-                <TextInput
-                  style={styles.input}
-                  value={proofUrl}
-                  onChangeText={setProofUrl}
-                  placeholder="Lien vers doc, page, Drive..."
-                  autoCapitalize="none"
-                />
-              </View>
-            </View>
-
-            <TouchableOpacity
-              style={[styles.primaryBtn, (!canSubmit || submitting || loading) && { opacity: 0.55 }]}
-              activeOpacity={0.9}
-              disabled={!canSubmit || submitting || loading}
-              onPress={onSubmit}
-            >
-              <Text style={styles.primaryText}>
-                {submitting ? 'Envoi...' : existing?.status === 'REJECTED' ? 'Renvoyer la demande' : 'Envoyer la demande'}
+              {renderInput(
+                'Description',
+                description,
+                setDescription,
+                'Présentez votre mission, vos objectifs et vos types d\'événements...',
+                'document-text-outline',
+                'description',
+                { multiline: true, textAlignVertical: 'top' }
+              )}
+              <Text style={[styles.charCount, description.length < 10 && description.length > 0 && { color: Colors.danger }]}>
+                {description.length} / 10 caractères minimum
               </Text>
-            </TouchableOpacity>
-          </View>
 
-          <Text style={styles.hint}>
-            {loading
-              ? 'Chargement...'
-              : 'Astuce: une seule demande peut être en attente à la fois.'}
-          </Text>
+              {renderInput(
+                'Téléphone de contact',
+                phone,
+                setPhone,
+                'Ex: +228 90 00 00 00',
+                'call-outline',
+                'phone',
+                { keyboardType: 'phone-pad' }
+              )}
+
+              {renderInput(
+                'Site web (optionnel)',
+                website,
+                setWebsite,
+                'https://votre-site.com',
+                'globe-outline',
+                'website',
+                { autoCapitalize: 'none', keyboardType: 'url' }
+              )}
+
+              {renderInput(
+                'Lien de preuve (optionnel)',
+                proofUrl,
+                setProofUrl,
+                'LinkedIn, Drive, Facebook...',
+                'link-outline',
+                'proof',
+                { autoCapitalize: 'none', keyboardType: 'url' }
+              )}
+
+              <TouchableOpacity
+                style={[styles.submitBtn, (!canSubmit || submitting || loading) && styles.submitBtnDisabled]}
+                activeOpacity={0.8}
+                disabled={!canSubmit || submitting || loading}
+                onPress={onSubmit}
+              >
+                <LinearGradient
+                  colors={canSubmit && !submitting ? ['#03045e', '#0077b6'] : ['#A0AEC0', '#CBD5E0']}
+                  style={styles.submitGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  {submitting ? (
+                    <Text style={styles.submitText}>Envoi en cours...</Text>
+                  ) : (
+                    <>
+                      <Text style={styles.submitText}>
+                        {existing?.status === 'REJECTED' ? 'Renvoyer ma demande' : 'Envoyer ma demande'}
+                      </Text>
+                      <AppIcon name="arrow-forward" size={18} color={Colors.white} />
+                    </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.footerHint}>
+              <AppIcon name="information-circle-outline" size={16} color={Colors.textMuted} />
+              <Text style={styles.hintText}>
+                {loading
+                  ? 'Chargement des données...'
+                  : 'Une seule demande peut être en attente à la fois.'}
+              </Text>
+            </View>
+          </View>
         </ScrollView>
-      </View>
+      </LinearGradient>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 52,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
     paddingHorizontal: Spacing.md,
     paddingBottom: Spacing.sm,
   },
   backBtn: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: 15,
     backgroundColor: Colors.white,
     alignItems: 'center',
     justifyContent: 'center',
     ...Shadows.card,
   },
-  headerTitle: { fontSize: FontSize.lg, fontWeight: FontWeight.extrabold, color: Colors.primary },
-  scroll: { padding: Spacing.md, paddingBottom: 40 },
-  card: {
+  headerTitle: {
+    fontSize: FontSize.lg,
+    fontFamily: Fonts.headerBold,
+    color: Colors.primary,
+  },
+  scroll: {
+    flexGrow: 1,
+    paddingBottom: 40,
+  },
+  content: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+  },
+  introSection: {
+    alignItems: 'center',
+    marginBottom: Spacing.xl,
+  },
+  iconCircle: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.md,
+    ...Shadows.button,
+  },
+  title: {
+    fontSize: FontSize.xl,
+    fontFamily: Fonts.headerExtraBold,
+    color: Colors.primary,
+    textAlign: 'center',
+    marginBottom: Spacing.xs,
+  },
+  subtitle: {
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+    paddingHorizontal: 10,
+  },
+  statusBox: {
+    marginBottom: Spacing.lg,
+  },
+  statusGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+  },
+  statusText: {
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.bold,
+  },
+  formCard: {
     backgroundColor: Colors.white,
     borderRadius: BorderRadius.xl,
     padding: Spacing.lg,
-    gap: 12,
+    gap: 20,
     ...Shadows.card,
   },
-  title: { fontSize: FontSize.xl, fontWeight: FontWeight.extrabold, color: Colors.primary, textAlign: 'center' },
-  subtitle: { fontSize: FontSize.sm, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20 },
-  badgeRow: { alignItems: 'center', marginTop: 4, marginBottom: 4 },
-  badge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 99 },
-  badgeText: { fontSize: FontSize.xs, fontWeight: FontWeight.bold },
-  field: { gap: 6 },
-  label: { fontSize: FontSize.sm, fontWeight: FontWeight.semibold, color: Colors.textPrimary },
-  inputBox: {
+  field: {
+    gap: 8,
+  },
+  label: {
+    fontSize: FontSize.sm,
+    fontFamily: Fonts.medium,
+    color: Colors.textPrimary,
+    marginLeft: 4,
+  },
+  inputContainer: {
     flexDirection: 'row',
-    gap: 10,
-    backgroundColor: Colors.inputBg,
-    borderRadius: BorderRadius.full,
+    backgroundColor: '#F7FAFC',
+    borderRadius: BorderRadius.lg,
     borderWidth: 1.5,
-    borderColor: Colors.border,
-    paddingHorizontal: 14,
+    borderColor: '#EDF2F7',
+    paddingHorizontal: 12,
+    minHeight: 56,
+  },
+  inputContainerFocused: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.white,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  inputContainerMultiline: {
+    minHeight: 120,
+    alignItems: 'flex-start',
+  },
+  iconWrapper: {
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
+    fontSize: FontSize.md,
+    color: Colors.textPrimary,
     paddingVertical: 12,
   },
-  input: { flex: 1, fontSize: FontSize.md, color: Colors.textPrimary },
-  primaryBtn: {
-    marginTop: 6,
-    backgroundColor: Colors.primary,
-    borderRadius: 999,
-    paddingVertical: 16,
-    alignItems: 'center',
+  inputMultiline: {
+    paddingTop: 14,
+  },
+  submitBtn: {
+    marginTop: Spacing.sm,
+    borderRadius: BorderRadius.full,
+    overflow: 'hidden',
     ...Shadows.button,
   },
-  primaryText: { fontSize: FontSize.md, fontWeight: FontWeight.bold, color: Colors.white },
-  hint: { textAlign: 'center', color: Colors.textMuted, marginTop: 12 },
+  submitBtnDisabled: {
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  submitGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 18,
+  },
+  submitText: {
+    color: Colors.white,
+    fontSize: FontSize.md,
+    fontFamily: Fonts.bold,
+  },
+  footerHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: Spacing.xl,
+  },
+  hintText: {
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
+    fontStyle: 'italic',
+  },
+  charCount: {
+    fontSize: 10,
+    color: Colors.textMuted,
+    textAlign: 'right',
+    marginTop: -16,
+    marginRight: 4,
+  },
 });
+
 

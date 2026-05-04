@@ -24,8 +24,17 @@ export default function EditProfileScreen({ navigation }: any) {
   const [userName, setUserName] = useState('');
   const [email, setEmail] = useState('');
   const [bio, setBio] = useState('');
+  const [communityDescription, setCommunityDescription] = useState('');
+  const [phone, setPhone] = useState('');
+  const [website, setWebsite] = useState('');
+  const [proofUrl, setProofUrl] = useState('');
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    // Force a refresh from backend on mount to ensure we have the latest organizer fields
+    refreshUser().catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     if (!dbUser) return;
@@ -34,6 +43,10 @@ export default function EditProfileScreen({ navigation }: any) {
     setUserName(n);
     setOrganizationName(typeof dbUser.organizationName === 'string' ? dbUser.organizationName : '');
     setBio(typeof dbUser.bio === 'string' ? dbUser.bio : '');
+    setCommunityDescription(typeof dbUser.communityDescription === 'string' ? dbUser.communityDescription : '');
+    setPhone(typeof dbUser.phone === 'string' ? dbUser.phone : '');
+    setWebsite(typeof dbUser.website === 'string' ? dbUser.website : '');
+    setProofUrl(typeof dbUser.proofUrl === 'string' ? dbUser.proofUrl : '');
     setAvatarUri(typeof dbUser.avatar === 'string' ? dbUser.avatar : null);
     setEmail(auth.currentUser?.email || dbUser.email || '');
   }, [dbUser]);
@@ -98,6 +111,10 @@ export default function EditProfileScreen({ navigation }: any) {
       if (isOrganizer) {
         payload.name = organizerName || undefined;
         payload.organizationName = organizationName || undefined;
+        payload.communityDescription = communityDescription || undefined;
+        payload.phone = phone || undefined;
+        payload.website = website || undefined;
+        payload.proofUrl = proofUrl || undefined;
       } else {
         payload.name = userName || undefined;
       }
@@ -207,6 +224,69 @@ export default function EditProfileScreen({ navigation }: any) {
                 />
               </View>
             </View>
+
+            {isOrganizer && (
+              <>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>DESCRIPTION DE LA COMMUNAUTÉ</Text>
+                  <View style={[styles.inputWrapper, styles.textAreaWrapper]}>
+                    <TextInput
+                      style={[styles.input, styles.textArea]}
+                      value={communityDescription}
+                      onChangeText={setCommunityDescription}
+                      placeholder="Présentez votre communauté..."
+                      multiline
+                      numberOfLines={4}
+                      textAlignVertical="top"
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>TÉLÉPHONE</Text>
+                  <View style={styles.inputWrapper}>
+                    <AppIcon name="call-outline" size={20} color={Colors.textMuted} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      value={phone}
+                      onChangeText={setPhone}
+                      placeholder="Ex: +228 90 00 00 00"
+                      keyboardType="phone-pad"
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>SITE WEB</Text>
+                  <View style={styles.inputWrapper}>
+                    <AppIcon name="globe-outline" size={20} color={Colors.textMuted} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      value={website}
+                      onChangeText={setWebsite}
+                      placeholder="https://..."
+                      autoCapitalize="none"
+                      keyboardType="url"
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>LIEN PREUVE</Text>
+                  <View style={styles.inputWrapper}>
+                    <AppIcon name="link-outline" size={20} color={Colors.textMuted} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      value={proofUrl}
+                      onChangeText={setProofUrl}
+                      placeholder="Lien vers doc, page, Drive..."
+                      autoCapitalize="none"
+                      keyboardType="url"
+                    />
+                  </View>
+                </View>
+              </>
+            )}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
