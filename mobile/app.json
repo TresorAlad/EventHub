@@ -42,15 +42,15 @@
         "expo-build-properties",
         {
           "android": {
-            "enableProguardInReleaseBuilds": true,
-            "enableShrinkResourcesInReleaseBuilds": true
+            "enableProguardInReleaseBuilds": false,
+            "enableShrinkResourcesInReleaseBuilds": false,
+            "extraProguardRules": ""
           },
           "ios": {
             "useFrameworks": "static"
           }
         }
-      ],
-      "@sentry/react-native/expo"
+      ]
     ],
     "extra": {
       "eas": {
