@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, StatusBar, Alert, ActivityIndicator, KeyboardAvoidingView, Platform
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, StatusBar, ActivityIndicator, KeyboardAvoidingView, Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
 import { updateEvent } from '../services/api';
+import { useAppAlert } from '../contexts/AppAlertContext';
 
 export default function EditEventScreen({ route, navigation }: any) {
+  const { showAlert } = useAppAlert();
   const event = route.params?.event;
   const [loading, setLoading] = useState(false);
 
@@ -16,18 +18,26 @@ export default function EditEventScreen({ route, navigation }: any) {
 
   const handleUpdate = async () => {
     if (!title || !description) {
-      Alert.alert('Champs requis', 'Veuillez remplir le titre et la description.');
+      showAlert({
+        variant: 'warning',
+        title: 'Champs requis',
+        message: 'Veuillez remplir le titre et la description.',
+      });
       return;
     }
 
     setLoading(true);
     try {
-      await updateEvent(event.id, { title, description, location });
-      Alert.alert('Succès', 'Événement modifié avec succès !');
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('description', description);
+      formData.append('location', location);
+      await updateEvent(event.id, formData);
+      showAlert({ variant: 'success', title: 'Succès', message: 'Événement modifié avec succès !' });
       navigation.goBack();
     } catch (error: any) {
       console.error(error);
-      Alert.alert('Erreur', 'Échec de la modification de l\'événement.');
+      showAlert({ variant: 'error', title: 'Erreur', message: "Échec de la modification de l'événement." });
     } finally {
       setLoading(false);
     }

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -6,11 +6,11 @@ import {
   FlatList,
   TouchableOpacity,
   Dimensions,
-  Animated,
   Image,
   StatusBar,
 } from 'react-native';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing } from '../theme';
+import Animated, { interpolate, type SharedValue, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 const { width, height } = Dimensions.get('window');
 
@@ -21,7 +21,7 @@ const slides = [
     highlight: 'tech',
     titleEnd: ' du\nTogo',
     description: "Rejoignez la plus grande communauté d'innovation et accédez aux meetups, conférences et hackathons locaux.",
-    image: require('../../assets/onboarding1.png'),
+    image: require('../../assets/onboarding_tech_2.png'),
   },
   {
     id: '2',
@@ -29,7 +29,7 @@ const slides = [
     highlight: 'innovateurs',
     titleEnd: '\ndu pays',
     description: 'Rencontre les entrepreneurs, développeurs et créateurs qui façonnent l\'écosystème tech togolais.',
-    image: require('../../assets/onboarding1.png'),
+    image: require('../../assets/onboarding_tech_1.png'),
   },
   {
     id: '3',
@@ -37,25 +37,64 @@ const slides = [
     highlight: 'événements',
     titleEnd: '\nfacilment',
     description: 'En quelques clics, publie ton meetup, workshop ou hackathon et touche toute la communauté tech.',
-    image: require('../../assets/onboarding1.png'),
+    image: require('../../assets/onboarding_tech_3.png'),
   },
 ];
+
+const Dot: React.FC<{ index: number; progress: SharedValue<number> }> = ({ index, progress }) => {
+  const style = useAnimatedStyle(() => {
+    const width = interpolate(progress.value, [index - 1, index, index + 1], [8, 28, 8]);
+    const opacity = interpolate(progress.value, [index - 1, index, index + 1], [0.5, 1, 0.5]);
+    return {
+      width,
+      opacity,
+    };
+  }, [index]);
+
+  return <Animated.View style={[styles.dot, style]} />;
+};
 
 export default function OnboardingScreen({ navigation }: any) {
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
-  const scrollX = useRef(new Animated.Value(0)).current;
+  const progress = useSharedValue(0);
 
-  const handleNext = () => {
+  useEffect(() => {
+    progress.value = withTiming(activeIndex, { duration: 240 });
+  }, [activeIndex, progress]);
+
+  const handleNext = useCallback(() => {
     if (activeIndex < slides.length - 1) {
       flatListRef.current?.scrollToIndex({ index: activeIndex + 1 });
       setActiveIndex(activeIndex + 1);
     } else {
       navigation.replace('SignIn');
     }
-  };
+  }, [activeIndex, navigation]);
 
-  const handleSkip = () => navigation.replace('SignIn');
+  const handleSkip = useCallback(() => navigation.replace('SignIn'), [navigation]);
+
+  const renderSlide = useCallback(({ item }: any) => {
+    return (
+      <View style={styles.slide}>
+        <View style={styles.imageContainer}>
+          <Image source={item.image} style={styles.image} resizeMode="cover" />
+        </View>
+      </View>
+    );
+  }, []);
+
+  const keyExtractor = useCallback((item: any) => item.id, []);
+
+  const Dots = useMemo(() => {
+    return (
+      <View style={styles.dots}>
+        {slides.map((_, i) => (
+          <Dot key={String(i)} index={i} progress={progress} />
+        ))}
+      </View>
+    );
+  }, [progress]);
 
   return (
     <View style={styles.container}>
@@ -73,29 +112,18 @@ export default function OnboardingScreen({ navigation }: any) {
       <FlatList
         ref={flatListRef}
         data={slides}
-        keyExtractor={(item) => item.id}
+        keyExtractor={keyExtractor}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         scrollEnabled={false}
-        onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], { useNativeDriver: false })}
-        renderItem={({ item }) => (
-          <View style={styles.slide}>
-            <View style={styles.imageContainer}>
-              <Image source={item.image} style={styles.image} resizeMode="cover" />
-            </View>
-          </View>
-        )}
+        renderItem={renderSlide}
       />
 
       {/* Bottom card */}
       <View style={styles.bottomCard}>
         {/* Dots */}
-        <View style={styles.dots}>
-          {slides.map((_, i) => (
-            <View key={i} style={[styles.dot, i === activeIndex && styles.dotActive]} />
-          ))}
-        </View>
+        {Dots}
 
         <Text style={styles.title}>
           {slides[activeIndex].title}

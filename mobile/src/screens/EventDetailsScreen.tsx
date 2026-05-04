@@ -1,15 +1,18 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, Image, StatusBar, Alert, Linking,
+  TouchableOpacity, Image, StatusBar, Linking, Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
 import { useAuth } from '../hooks/useAuth';
 import { getEventInteractions, registerToEvent, toggleFavorite, toggleFollowOrganizer, unregisterFromEvent } from '../services/api';
+import EventImage from '../components/EventImage';
+import { useAppAlert } from '../contexts/AppAlertContext';
 
 export default function EventDetailsScreen({ navigation, route }: any) {
-  const { dbUser, user } = useAuth();
+  const { dbUser } = useAuth();
+  const { showAlert } = useAppAlert();
   const event = route.params?.event || {};
   
   const isExternal = event.registrationMode === 'External' || event.externalLink;
@@ -18,7 +21,7 @@ export default function EventDetailsScreen({ navigation, route }: any) {
 
   const isOrganizer = dbUser?.id === event.organizerId || event.organizer?.id === dbUser?.id || false;
 
-  const bannerImage = event.imageUrl ? { uri: event.imageUrl } : require('../../assets/onboarding1.png');
+  const bannerImage = event.imageUrl ? { uri: event.imageUrl } : require('../../assets/onboarding_tech_3.png');
   const orgName = event.organizer?.name || event.organizer || 'Communauté Tech';
   const orgAvatar = event.organizer?.avatar ? { uri: event.organizer.avatar } : require('../../assets/logo.jpeg');
   const eventDate = event.date ? new Date(event.date) : new Date();
@@ -33,6 +36,7 @@ export default function EventDetailsScreen({ navigation, route }: any) {
   const [registered, setRegistered] = useState(false);
   const [favorited, setFavorited] = useState(false);
   const [following, setFollowing] = useState(false);
+  const [imageOpen, setImageOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -56,53 +60,75 @@ export default function EventDetailsScreen({ navigation, route }: any) {
 
   const handleRegister = async () => {
     if (isExternal) {
-      Alert.alert(
-        'Redirection',
-        'Cet événement est géré sur une plateforme externe. Vous allez être redirigé vers le site partenaire.',
-        [
-          { text: 'Annuler', style: 'cancel' },
-          { text: 'Continuer', onPress: () => Linking.openURL(registrationLink).catch(() => Alert.alert('Erreur', "Impossible d'ouvrir le lien.")) }
-        ]
-      );
+      showAlert({
+        variant: 'info',
+        title: 'Redirection',
+        message:
+          "Cet événement est géré sur une plateforme externe. Vous allez être redirigé vers le site partenaire.",
+        primaryText: 'Continuer',
+        secondaryText: 'Annuler',
+        onPrimary: async () => {
+          try {
+            await Linking.openURL(registrationLink);
+          } catch {
+            showAlert({ variant: 'error', title: 'Erreur', message: "Impossible d'ouvrir le lien." });
+          }
+        },
+      });
     } else {
       if (eventExpired) {
-        Alert.alert('Événement expiré', "Les inscriptions sont fermées pour cet événement.");
+        showAlert({
+          variant: 'warning',
+          title: 'Événement expiré',
+          message: "Les inscriptions sont fermées pour cet événement.",
+        });
         return;
       }
-      Alert.alert(
-        'Confirmation',
-        'Voulez-vous valider votre participation automatiquement avec les informations de votre profil ?',
-        [
-          { text: 'Annuler', style: 'cancel' },
-          {
-            text: registered ? "Se désinscrire" : 'Confirmer',
-            onPress: async () => {
-              try {
-                if (registered) {
-                  await unregisterFromEvent(event.id);
-                  setRegistered(false);
-                  Alert.alert('OK', "Vous êtes désinscrit.");
-                } else {
-                  await registerToEvent(event.id);
-                  setRegistered(true);
-                  Alert.alert('Succès', "Votre inscription a été validée.");
-                }
-              } catch (e: any) {
-                Alert.alert('Erreur', e?.response?.data?.message || "Impossible de finaliser l'inscription.");
-              }
-            },
-          },
-        ]
-      );
+      showAlert({
+        variant: 'info',
+        title: 'Confirmation',
+        message: 'Voulez-vous valider votre participation automatiquement avec les informations de votre profil ?',
+        primaryText: registered ? 'Se désinscrire' : 'Confirmer',
+        secondaryText: 'Annuler',
+        onPrimary: async () => {
+          try {
+            if (registered) {
+              await unregisterFromEvent(event.id);
+              setRegistered(false);
+              showAlert({ variant: 'success', title: 'OK', message: 'Vous êtes désinscrit.' });
+            } else {
+              await registerToEvent(event.id);
+              setRegistered(true);
+              showAlert({ variant: 'success', title: 'Succès', message: 'Votre inscription a été validée.' });
+            }
+          } catch (e: any) {
+            showAlert({
+              variant: 'error',
+              title: 'Erreur',
+              message: e?.response?.data?.message || "Impossible de finaliser l'inscription.",
+            });
+          }
+        },
+      });
     }
   };
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
+      <Modal visible={imageOpen} transparent animationType="fade" onRequestClose={() => setImageOpen(false)}>
+        <View style={styles.imageModalBackdrop}>
+          <TouchableOpacity style={styles.imageModalClose} onPress={() => setImageOpen(false)} activeOpacity={0.9}>
+            <Ionicons name="close" size={22} color={Colors.white} />
+          </TouchableOpacity>
+          <EventImage source={bannerImage} style={styles.imageModalImg} contentFit="contain" />
+        </View>
+      </Modal>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         {/* Cover */}
         <View style={styles.coverContainer}>
-          <Image source={bannerImage} style={styles.cover} resizeMode="cover" />
+          <TouchableOpacity activeOpacity={0.92} onPress={() => setImageOpen(true)} style={StyleSheet.absoluteFill}>
+            <EventImage source={bannerImage} style={styles.cover} />
+          </TouchableOpacity>
           <View style={styles.coverOverlay} />
           <View style={styles.topBar}>
             <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
@@ -110,7 +136,12 @@ export default function EventDetailsScreen({ navigation, route }: any) {
             </TouchableOpacity>
             <Text style={styles.topTitle}>EventHub</Text>
             <View style={styles.topRight}>
-              <TouchableOpacity style={styles.iconBtn} onPress={() => Alert.alert('Partager', "Lien de l'événement copié !")}>
+              <TouchableOpacity
+                style={styles.iconBtn}
+                onPress={() =>
+                  showAlert({ variant: 'success', title: 'Partager', message: "Lien de l'événement copié !" })
+                }
+              >
                 <Ionicons name="share-social-outline" size={20} color={Colors.primary} />
               </TouchableOpacity>
               <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Search')}>
@@ -132,7 +163,7 @@ export default function EventDetailsScreen({ navigation, route }: any) {
 
           <View style={styles.organizerRow}>
             <View style={styles.orgAvatar}>
-              <Image source={orgAvatar} style={{ width: '100%', height: '100%', borderRadius: 99 }} />
+              <EventImage source={orgAvatar} style={{ width: '100%', height: '100%', borderRadius: 99 }} />
             </View>
             <View>
               <Text style={styles.organizedBy}>ORGANISÉ PAR</Text>
@@ -148,7 +179,11 @@ export default function EventDetailsScreen({ navigation, route }: any) {
                     const r = await toggleFollowOrganizer(String(organizerId));
                     setFollowing(Boolean(r?.following));
                   } catch (e: any) {
-                    Alert.alert('Erreur', e?.response?.data?.message || "Impossible d'effectuer l'action.");
+                    showAlert({
+                      variant: 'error',
+                      title: 'Erreur',
+                      message: e?.response?.data?.message || "Impossible d'effectuer l'action.",
+                    });
                   }
                 }}
               >
@@ -188,10 +223,14 @@ export default function EventDetailsScreen({ navigation, route }: any) {
               onPress={() => {
                 if (participationMode === 'Online' || participationMode === 'online') {
                   const link = event.location?.startsWith('http') ? event.location : 'https://meet.google.com';
-                  Linking.openURL(link).catch(() => Alert.alert('Erreur', "Impossible d'ouvrir le lien de réunion."));
+                  Linking.openURL(link).catch(() =>
+                    showAlert({ variant: 'error', title: 'Erreur', message: "Impossible d'ouvrir le lien de réunion." })
+                  );
                 } else {
                   const query = encodeURIComponent(event.location || 'Lomé, Togo');
-                  Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${query}`).catch(() => Alert.alert('Erreur', "Impossible d'ouvrir Google Maps."));
+                  Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${query}`).catch(() =>
+                    showAlert({ variant: 'error', title: 'Erreur', message: "Impossible d'ouvrir Google Maps." })
+                  );
                 }
               }}
             >
@@ -237,7 +276,11 @@ export default function EventDetailsScreen({ navigation, route }: any) {
               const r = await toggleFavorite(event.id);
               setFavorited(Boolean(r?.favorited));
             } catch (e: any) {
-              Alert.alert('Erreur', e?.response?.data?.message || "Impossible de modifier les favoris.");
+              showAlert({
+                variant: 'error',
+                title: 'Erreur',
+                message: e?.response?.data?.message || "Impossible de modifier les favoris.",
+              });
             }
           }}
         >
@@ -247,7 +290,13 @@ export default function EventDetailsScreen({ navigation, route }: any) {
         {isOrganizer ? (
           <TouchableOpacity 
             style={[styles.registerBtn, { backgroundColor: '#10b981', flexDirection: 'row', justifyContent: 'center', gap: 8 }]} 
-            onPress={() => Alert.alert('Gestion des Inscrits', `🌟 Super ! Vous avez actuellement ${event.attendees || 0} participants inscrits.\n\nLe dashboard de tracking sera disponible dans la prochaine mise à jour pour exporter la liste.`, [{text:'Génial'}])}>
+            onPress={() =>
+              showAlert({
+                variant: 'info',
+                title: 'Gestion des inscrits',
+                message: `Vous avez actuellement ${event.attendees || 0} participants inscrits.\n\nLe dashboard de tracking sera disponible dans une prochaine mise à jour.`,
+              })
+            }>
             <Ionicons name="people" size={20} color="#fff" />
             <Text style={styles.registerText}>Suivre les inscrits ({event.attendees || 0})</Text>
           </TouchableOpacity>
@@ -267,6 +316,28 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   coverContainer: { height: 240, position: 'relative' },
   cover: { width: '100%', height: '100%' },
+  imageModalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.92)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+  },
+  imageModalImg: {
+    width: '100%',
+    height: '85%',
+  },
+  imageModalClose: {
+    position: 'absolute',
+    top: 54,
+    right: 16,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.14)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   coverOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.3)' },
   topBar: { position: 'absolute', top: 48, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: Spacing.md },
   backBtn: { width: 38, height: 38, borderRadius: 99, backgroundColor: Colors.white, alignItems: 'center', justifyContent: 'center', ...Shadows.card },

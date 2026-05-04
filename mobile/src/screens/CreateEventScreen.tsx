@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, StatusBar, Image, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, LayoutAnimation, UIManager, Switch
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, StatusBar, Image, ActivityIndicator, KeyboardAvoidingView, Platform, LayoutAnimation, UIManager, Switch
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
 import { createEvent, updateEvent } from '../services/api';
+import EventImage from '../components/EventImage';
+import { useAppAlert } from '../contexts/AppAlertContext';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -14,6 +16,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 const CATEGORIES = ['Innovation & Fintech', 'Hackathon', 'Meetup', 'Workshop', 'Conférence', 'Pitch Night', 'Web3 & Crypto'];
 
 export default function CreateEventScreen({ route, navigation }: any) {
+  const { showAlert } = useAppAlert();
   const eventToEdit = route?.params?.event;
   const isEditing = !!eventToEdit;
 
@@ -59,7 +62,11 @@ export default function CreateEventScreen({ route, navigation }: any) {
     if (!result.canceled) {
       const fileSize = result.assets[0].fileSize;
       if (fileSize && fileSize > 5 * 1024 * 1024) {
-        Alert.alert('Image trop lourde', 'L\'image dépasse 5 Mo. Veuillez choisir une image plus légère pour respecter les limites du serveur.');
+        showAlert({
+          variant: 'warning',
+          title: 'Image trop lourde',
+          message: "L'image dépasse 5 Mo. Veuillez choisir une image plus légère pour respecter les limites du serveur.",
+        });
         return;
       }
       setImage(result.assets[0].uri);
@@ -68,7 +75,11 @@ export default function CreateEventScreen({ route, navigation }: any) {
 
   const nextStep = () => {
     if (step === 1 && (!title || !organizer || !description)) {
-      Alert.alert('Champs requis', 'Veuillez remplir le titre, lab communauté et la description.');
+      showAlert({
+        variant: 'warning',
+        title: 'Champs requis',
+        message: 'Veuillez remplir le titre, la communauté et la description.',
+      });
       return;
     }
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -113,15 +124,23 @@ export default function CreateEventScreen({ route, navigation }: any) {
 
       if (isEditing) {
         await updateEvent(eventToEdit.id, formData);
-        Alert.alert('Succès', 'Événement modifié avec succès !');
+        showAlert({ variant: 'success', title: 'Succès', message: 'Événement modifié avec succès !' });
       } else {
         await createEvent(formData);
-        Alert.alert('Succès', 'Événement publié avec succès !');
+        showAlert({
+          variant: 'success',
+          title: 'Succès',
+          message: "Événement envoyé. Il sera visible après validation de l'administrateur.",
+        });
       }
       navigation.goBack();
     } catch (error: any) {
       console.error(error?.response?.data || error);
-      Alert.alert('Erreur', isEditing ? 'Échec de la modification.' : 'Échec de la publication de l\'événement.');
+      showAlert({
+        variant: 'error',
+        title: 'Erreur',
+        message: isEditing ? 'Échec de la modification.' : "Échec de la publication de l'événement.",
+      });
     } finally {
       setLoading(false);
     }
@@ -155,7 +174,7 @@ export default function CreateEventScreen({ route, navigation }: any) {
 
             <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
               {image ? (
-                <Image source={{ uri: image }} style={styles.coverImage} />
+                <EventImage source={{ uri: image }} style={styles.coverImage} />
               ) : (
                 <View style={styles.imagePlaceholder}>
                   <Ionicons name="image-outline" size={32} color={Colors.primary} />

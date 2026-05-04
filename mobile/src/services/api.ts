@@ -1,12 +1,30 @@
 import axios from 'axios';
-import { auth } from '../config/firebase';
+import axiosRetry, { exponentialDelay, isNetworkOrIdempotentRequestError } from 'axios-retry';
+import { getCachedIdToken } from '../lib/firebaseToken';
 
 // Backend production (Vercel)
 const API_URL = 'https://backend-vhub.vercel.app/api';
 
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 10000, // 10 secondes max
+  // Vercel peut avoir des cold starts ; 15s + axios-retry couvrent.
+  timeout: 15000,
+});
+
+// Retry exponentiel : encaisse les cold starts Vercel et les pertes réseau passagères
+// sans pénaliser l'utilisateur. On retry les erreurs réseau, les 5xx, 408 et 429.
+axiosRetry(api, {
+  retries: 3,
+  retryDelay: exponentialDelay,
+  shouldResetTimeout: true,
+  retryCondition: (error) => {
+    if (isNetworkOrIdempotentRequestError(error)) return true;
+    const status = error.response?.status;
+    if (!status) return true;
+    if (status >= 500) return true;
+    if (status === 408 || status === 429) return true;
+    return false;
+  },
 });
 
 type ApiEnvelope<T> = {
@@ -22,16 +40,16 @@ const unwrap = <T>(payload: T | ApiEnvelope<T>): T => {
   return payload as T;
 };
 
-// Attach Firebase ID token to every authenticated request
+// Attach Firebase ID token (depuis le cache mémoire) à chaque requête authentifiée.
+// Le cache évite des appels `getIdToken()` réseau répétés à chaque requête API.
 api.interceptors.request.use(async (config) => {
-  const user = auth.currentUser;
-  if (user) {
-    try {
-      const token = await user.getIdToken();
+  try {
+    const token = await getCachedIdToken();
+    if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-    } catch (err) {
-      console.warn('Impossible de récupérer le token Firebase:', err);
     }
+  } catch (err) {
+    console.warn('Impossible de récupérer le token Firebase:', err);
   }
   return config;
 });
@@ -129,6 +147,22 @@ export const toggleFavorite = async (eventId: string) => {
 export const toggleFollowOrganizer = async (organizerId: string) => {
   const response = await api.post(`/interactions/organizers/${organizerId}/follow`);
   return unwrap(response.data);
+};
+
+// Warmup : ping le backend Vercel au cold start app pour éviter qu'un user hit
+// une fonction froide sur sa première vraie requête. Best-effort, ne bloque rien.
+// On pointe sur GET /events car il est public, léger, et la réponse pré-chauffe
+// le cache React Query (le Home aura ses events instantanément).
+let warmupPromise: Promise<unknown> | null = null;
+export const warmupBackend = (): Promise<unknown> => {
+  if (warmupPromise) return warmupPromise;
+  warmupPromise = api
+    .get('/events', { timeout: 8000 })
+    .catch(() => {
+      // Permettre une re-tentative future si le ping initial a échoué.
+      warmupPromise = null;
+    });
+  return warmupPromise;
 };
 
 export default api;

@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, ImageBackground, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing } from '../theme';
+import EventImage from './EventImage';
 
 interface TrendingCardProps {
   category: string;
@@ -14,36 +15,47 @@ interface TrendingCardProps {
   onPress?: () => void;
 }
 
-export default function TrendingCard({ category, title, subtitle, date, time, image, status, onPress }: TrendingCardProps) {
+function TrendingCard({ category, title, subtitle, date, time, image, status, onPress }: TrendingCardProps) {
   const isExpired = status === 'Expired' || status === 'Past';
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.92}>
-      <ImageBackground source={image} style={styles.image} imageStyle={styles.imageStyle}>
-        <View style={styles.overlay} />
-        <View style={styles.content}>
-          <View style={styles.headerRow}>
-            <View style={styles.tag}>
-              <Text style={styles.tagText}>{category}</Text>
-            </View>
-            {status && (
-              <View style={[styles.statusBadge, status === 'Live' ? styles.statusLive : isExpired ? styles.statusExpired : styles.statusUpcoming]}>
-                <Text style={styles.statusText}>{status === 'Live' ? 'LIVE' : isExpired ? 'EXPIRÉ' : 'À VENIR'}</Text>
-              </View>
-            )}
+      <EventImage source={image} style={styles.image} />
+      <View style={styles.overlay} />
+      <View style={styles.content}>
+        <View style={styles.headerRow}>
+          <View style={styles.tag}>
+            <Text style={styles.tagText}>{category}</Text>
           </View>
-          <View style={styles.bottom}>
-            {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
-            <Text style={styles.title} numberOfLines={2}>{title}</Text>
-            <View style={styles.meta}>
-              <Ionicons name="calendar-outline" size={13} color="rgba(255,255,255,0.8)" />
-              <Text style={styles.metaText}>{date}{time ? ` • ${time}` : ''}</Text>
+          {status && (
+            <View
+              style={[
+                styles.statusBadge,
+                status === 'Live' ? styles.statusLive : isExpired ? styles.statusExpired : styles.statusUpcoming,
+              ]}
+            >
+              <Text style={styles.statusText}>{status === 'Live' ? 'LIVE' : isExpired ? 'EXPIRÉ' : 'À VENIR'}</Text>
             </View>
+          )}
+        </View>
+        <View style={styles.bottom}>
+          {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+          <Text style={styles.title} numberOfLines={2}>
+            {title}
+          </Text>
+          <View style={styles.meta}>
+            <Ionicons name="calendar-outline" size={13} color="rgba(255,255,255,0.8)" />
+            <Text style={styles.metaText}>
+              {date}
+              {time ? ` • ${time}` : ''}
+            </Text>
           </View>
         </View>
-      </ImageBackground>
+      </View>
     </TouchableOpacity>
   );
 }
+
+export default React.memo(TrendingCard);
 
 const styles = StyleSheet.create({
   card: {
@@ -58,13 +70,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
   },
-  image: {
-    width: '100%',
-    height: '100%',
-  },
-  imageStyle: {
-    borderRadius: BorderRadius.xl,
-  },
+  image: { ...StyleSheet.absoluteFillObject },
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.45)',

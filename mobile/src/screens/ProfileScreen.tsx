@@ -1,10 +1,12 @@
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, StatusBar, Image, Alert,
+  TouchableOpacity, StatusBar, Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
 import { useAuth } from '../hooks/useAuth';
+import EventImage from '../components/EventImage';
+import { useAppAlert } from '../contexts/AppAlertContext';
 
 const SETTINGS = [
   { id: 'edit', icon: 'create-outline', label: 'Modifier le profil' },
@@ -14,6 +16,7 @@ const SETTINGS = [
 
 export default function ProfileScreen({ navigation, route }: any) {
   const { logout, dbUser } = useAuth();
+  const { showAlert } = useAppAlert();
   const isOrganizer = dbUser?.role === 'ORGANIZER' || dbUser?.role === 'ADMIN';
   const displayName =
     isOrganizer
@@ -32,7 +35,11 @@ export default function ProfileScreen({ navigation, route }: any) {
     } else if (id === 'privacy') {
       navigation.navigate('PrivacySecurity');
     } else {
-      Alert.alert(label, `Cette fonctionnalité "${label}" sera bientôt disponible.`);
+      showAlert({
+        variant: 'info',
+        title: label,
+        message: `Cette fonctionnalité "${label}" sera bientôt disponible.`,
+      });
     }
   };
 
@@ -57,10 +64,7 @@ export default function ProfileScreen({ navigation, route }: any) {
         {/* Profile section */}
         <View style={styles.profileSection}>
           <View style={styles.avatarWrapper}>
-            <Image 
-              source={avatarSource} 
-              style={styles.avatarLarge} 
-            />
+            <EventImage source={avatarSource} style={styles.avatarLarge} />
             <View style={styles.verifiedBadge}>
               <Ionicons name="checkmark-circle" size={22} color="#8b5cf6" />
             </View>
@@ -139,7 +143,7 @@ export default function ProfileScreen({ navigation, route }: any) {
             try {
               await logout();
             } catch (e) {
-              Alert.alert('Erreur', 'Impossible de se déconnecter.');
+              showAlert({ variant: 'error', title: 'Erreur', message: 'Impossible de se déconnecter.' });
             }
           }}
         >

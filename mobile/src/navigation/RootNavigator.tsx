@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import SplashScreen from '../screens/SplashScreen';
 import OnboardingScreen from '../screens/OnboardingScreen';
@@ -19,7 +19,29 @@ import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
 import { Colors } from '../theme';
 
-const Stack = createStackNavigator();
+// Native stack : transitions natives 60+ fps (UINavigationController iOS / Fragment Android),
+// `freezeOnBlur` libère le rendu CPU/GPU des écrans en arrière-plan = scaling RAM/CPU.
+const Stack = createNativeStackNavigator();
+
+const baseScreenOptions = {
+  headerShown: false,
+  animation: 'slide_from_right' as const,
+  animationDuration: 220,
+  freezeOnBlur: true,
+};
+
+const cardScreenOptions = {
+  presentation: 'card' as const,
+  animation: 'slide_from_right' as const,
+  animationDuration: 220,
+};
+
+const modalScreenOptions = {
+  presentation: 'modal' as const,
+  animation: 'slide_from_bottom' as const,
+  animationDuration: 260,
+  gestureEnabled: true,
+};
 
 function AuthLoadingScreen() {
   return (
@@ -30,53 +52,38 @@ function AuthLoadingScreen() {
 }
 
 export default function RootNavigator() {
-  const { user, loading } = useAuth();
+  const { user, initializing } = useAuth();
   useNotifications(user);
 
-  // Ne pas rendre SplashScreen ici : hors Stack, `navigation` est undefined et
-  // SplashScreen appelle navigation.replace → crash Expo Go ("Something went wrong").
-  if (loading) return <AuthLoadingScreen />;
+  // Pendant l'initialisation auth (cold start), on évite tout rendu de stack pour
+  // ne pas provoquer un flash d'écran. Le splash natif Expo est déjà visible jusqu'à
+  // l'hydration des polices ; cet écran prend le relais le temps de la sync backend.
+  if (initializing) return <AuthLoadingScreen />;
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator screenOptions={baseScreenOptions}>
       {!user ? (
         <>
-          <Stack.Screen name="Splash" component={SplashScreen} />
+          <Stack.Screen name="Splash" component={SplashScreen} options={{ animation: 'fade' }} />
           <Stack.Screen name="Onboarding" component={OnboardingScreen} />
           <Stack.Screen name="SignIn" component={SignInScreen} />
           <Stack.Screen name="SignUp" component={SignUpScreen} />
         </>
       ) : (
         <>
-          <Stack.Screen name="Main" component={MainTabNavigator} />
-          <Stack.Screen
-            name="EventDetails"
-            component={EventDetailsScreen}
-            options={{ presentation: 'card' }}
-          />
-          <Stack.Screen
-            name="CreateEvent"
-            component={CreateEventScreen}
-            options={{ presentation: 'modal' }}
-          />
-          <Stack.Screen
-            name="EditEvent"
-            component={EditEventScreen}
-            options={{ presentation: 'modal' }}
-          />
+          <Stack.Screen name="Main" component={MainTabNavigator} options={{ animation: 'fade' }} />
+          <Stack.Screen name="EventDetails" component={EventDetailsScreen} options={cardScreenOptions} />
+          <Stack.Screen name="CreateEvent" component={CreateEventScreen} options={modalScreenOptions} />
+          <Stack.Screen name="EditEvent" component={EditEventScreen} options={modalScreenOptions} />
           <Stack.Screen
             name="OrganizerEventDashboard"
             component={OrganizerEventDashboardScreen}
-            options={{ presentation: 'card' }}
+            options={cardScreenOptions}
           />
-          <Stack.Screen name="EditProfile" component={EditProfileScreen} />
-          <Stack.Screen name="Search" component={SearchScreen} />
-          <Stack.Screen
-            name="Filter"
-            component={FilterScreen}
-            options={{ presentation: 'modal' }}
-          />
-          <Stack.Screen name="PrivacySecurity" component={PrivacySecurityScreen} />
+          <Stack.Screen name="EditProfile" component={EditProfileScreen} options={cardScreenOptions} />
+          <Stack.Screen name="Search" component={SearchScreen} options={cardScreenOptions} />
+          <Stack.Screen name="Filter" component={FilterScreen} options={modalScreenOptions} />
+          <Stack.Screen name="PrivacySecurity" component={PrivacySecurityScreen} options={cardScreenOptions} />
         </>
       )}
     </Stack.Navigator>

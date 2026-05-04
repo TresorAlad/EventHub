@@ -1,124 +1,156 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  View, Text, StyleSheet, FlatList,
-  TouchableOpacity, StatusBar, TextInput,
-  Image,
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  StatusBar,
+  TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows, Fonts } from '../theme';
+import { useEventsQuery } from '../lib/queries';
 
-import { getEvents } from '../services/api';
+const computeStatus = (item: any): 'Upcoming' | 'Live' | 'Past' => {
+  const now = new Date();
+  const start = item?.date ? new Date(item.date) : now;
+  const end = item?.endDate ? new Date(item.endDate) : new Date(start.getTime() + 4 * 60 * 60 * 1000);
+  if (now > end) return 'Past';
+  if (now >= start && now <= end) return 'Live';
+  return 'Upcoming';
+};
 
 export default function SearchScreen({ route, navigation }: any) {
-  const organizerId = route.params?.organizerId;
-  const [searchQuery, setSearchQuery] = useState('');
-  const [allEvents, setAllEvents] = useState<any[]>([]);
-  const [results, setResults] = useState<any[]>([]);
+  const organizerId = route?.params?.organizerId;
+  const initialQuery = route?.params?.initialQuery ?? '';
+  const [searchQuery, setSearchQuery] = useState<string>(initialQuery);
+  const [debounced, setDebounced] = useState<string>(initialQuery);
 
-  React.useEffect(() => {
-    fetchEvents();
-  }, []);
+  const { data: events = [], isLoading } = useEventsQuery();
 
-  const fetchEvents = async () => {
-    try {
-      const data = await getEvents();
-      let filteredData = data;
-      if (organizerId) {
-        filteredData = data.filter((e: any) => e.organizerId === organizerId);
-      }
-      setAllEvents(filteredData);
-      setResults(filteredData);
-    } catch (error) {
-      console.error('Failed to fetch events on search screen', error);
-    }
-  };
+  // Debounce 200ms : évite de re-filtrer 1500 items à chaque frappe.
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(searchQuery), 200);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
 
-  const handleSearch = (text: string) => {
-    setSearchQuery(text);
-    if (text.trim() === '') {
-      setResults(allEvents);
-    } else {
-      const filtered = allEvents.filter(item => 
-        item.title.toLowerCase().includes(text.toLowerCase()) ||
-        (item.category && item.category.toLowerCase().includes(text.toLowerCase())) ||
-        (item.location && item.location.toLowerCase().includes(text.toLowerCase()))
-      );
-      setResults(filtered);
-    }
-  };
+  const baseList = useMemo(() => {
+    if (!Array.isArray(events)) return [];
+    return organizerId ? events.filter((e: any) => e.organizerId === organizerId) : events;
+  }, [events, organizerId]);
 
-  const renderItem = ({ item }: any) => {
-    const now = new Date();
-    const start = new Date(item.date);
-    const end = item.endDate ? new Date(item.endDate) : new Date(start.getTime() + 4 * 60 * 60 * 1000);
-    let status = 'Upcoming';
-    if (now > end) {
-      status = 'Expired';
-    } else if (now >= start && now <= end) {
-      status = 'Live';
-    }
+  const results = useMemo(() => {
+    const q = debounced.trim().toLowerCase();
+    if (!q) return baseList;
+    return baseList.filter(
+      (item: any) =>
+        (item?.title || '').toLowerCase().includes(q) ||
+        (item?.category || '').toLowerCase().includes(q) ||
+        (item?.location || '').toLowerCase().includes(q)
+    );
+  }, [baseList, debounced]);
 
-    return (
-      <TouchableOpacity 
-        style={styles.card}
-        onPress={() => navigation.navigate('EventDetails', { event: item })}
-      >
-        <View style={styles.cardContent}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <View style={styles.categoryBadge}>
-              <Text style={styles.categoryText}>{item.category || 'TECH'}</Text>
-            </View>
-            <View
-              style={[
-                styles.statusBadge,
-                status === 'Live' ? styles.statusLive : status === 'Expired' ? styles.statusExpired : styles.statusUpcoming,
-              ]}
-            >
-              <Text
+  const goBack = useCallback(() => navigation.goBack(), [navigation]);
+  const goToFilter = useCallback(() => navigation.navigate('Filter'), [navigation]);
+  const openDetails = useCallback(
+    (event: any) => navigation.navigate('EventDetails', { event }),
+    [navigation]
+  );
+
+  const keyExtractor = useCallback((item: any) => String(item.id), []);
+
+  const renderItem = useCallback(
+    ({ item }: { item: any }) => {
+      const status = computeStatus(item);
+      const start = new Date(item.date);
+      return (
+        <TouchableOpacity style={styles.card} onPress={() => openDetails(item)} activeOpacity={0.85}>
+          <View style={styles.cardContent}>
+            <View style={styles.cardHeader}>
+              <View style={styles.categoryBadge}>
+                <Text style={styles.categoryText}>{item.category || 'TECH'}</Text>
+              </View>
+              <View
                 style={[
-                  styles.statusText,
-                  { color: status === 'Live' ? '#ef4444' : status === 'Expired' ? '#64748b' : '#38bdf8' },
+                  styles.statusBadge,
+                  status === 'Live'
+                    ? styles.statusLive
+                    : status === 'Expired'
+                      ? styles.statusExpired
+                      : styles.statusUpcoming,
                 ]}
               >
-                {status === 'Live' ? 'LIVE' : status === 'Expired' ? 'EXPIRÉ' : 'À VENIR'}
-              </Text>
+                <Text
+                  style={[
+                    styles.statusText,
+                    {
+                      color:
+                        status === 'Live'
+                          ? '#ef4444'
+                          : status === 'Expired'
+                            ? '#64748b'
+                            : '#38bdf8',
+                    },
+                  ]}
+                >
+                  {status === 'Live' ? 'LIVE' : status === 'Past' ? 'PASSÉ' : 'À VENIR'}
+                </Text>
+              </View>
             </View>
+            <Text style={styles.cardTitle} numberOfLines={2}>
+              {item.title}
+            </Text>
+            <Text style={styles.cardMeta}>
+              {start.toLocaleDateString('fr-FR')} • {item.location || 'En Ligne'}
+            </Text>
           </View>
-          <Text style={styles.cardTitle}>{item.title}</Text>
-          <Text style={styles.cardMeta}>
-            {new Date(item.date).toLocaleDateString('fr-FR')} • {item.location || 'En Ligne'}
-          </Text>
-        </View>
-        <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
-      </TouchableOpacity>
-    );
-  };
+          <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+        </TouchableOpacity>
+      );
+    },
+    [openDetails]
+  );
+
+  const ListEmpty = useMemo(
+    () => (
+      <View style={styles.emptyContainer}>
+        <Ionicons name="search-outline" size={64} color={Colors.textMuted} />
+        <Text style={styles.emptyText}>
+          {isLoading ? 'Chargement...' : 'Aucun événement trouvé pour votre recherche.'}
+        </Text>
+      </View>
+    ),
+    [isLoading]
+  );
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
-      
-      {/* Header with Search Input */}
+
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={styles.backBtn} onPress={goBack}>
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
         <View style={styles.searchContainer}>
           <Ionicons name="search" size={20} color={Colors.textMuted} />
           <TextInput
             style={styles.searchInput}
-            placeholder={organizerId ? "Rechercher dans vos événements..." : "Rechercher événements, organisateurs..."}
+            placeholder={
+              organizerId ? 'Rechercher dans vos événements...' : 'Rechercher événements, organisateurs...'
+            }
             value={searchQuery}
-            onChangeText={handleSearch}
+            onChangeText={setSearchQuery}
             autoFocus
           />
           {searchQuery !== '' && (
-            <TouchableOpacity onPress={() => handleSearch('')}>
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
               <Ionicons name="close-circle" size={18} color={Colors.textMuted} />
             </TouchableOpacity>
           )}
         </View>
-        <TouchableOpacity style={styles.filterBtn} onPress={() => navigation.navigate('Filter')}>
+        <TouchableOpacity style={styles.filterBtn} onPress={goToFilter}>
           <Ionicons name="options-outline" size={22} color={Colors.primary} />
         </TouchableOpacity>
       </View>
@@ -126,24 +158,36 @@ export default function SearchScreen({ route, navigation }: any) {
       <View style={styles.content}>
         <View style={styles.resultsHeader}>
           <Text style={styles.resultsTitle}>
-            {searchQuery === '' ? (organizerId ? 'Tous vos événements' : 'Recherches Populaires') : `Résultats pour "${searchQuery}"`}
+            {debounced === ''
+              ? organizerId
+                ? 'Tous vos événements'
+                : 'Recherches Populaires'
+              : `Résultats pour "${debounced}"`}
           </Text>
-          <Text style={styles.resultsCount}>{results.length} trouvé{results.length > 1 ? 's' : ''}</Text>
+          <Text style={styles.resultsCount}>
+            {results.length} trouvé{results.length > 1 ? 's' : ''}
+          </Text>
         </View>
 
-        <FlatList
-          data={results}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons name="search-outline" size={64} color={Colors.textMuted} />
-              <Text style={styles.emptyText}>Aucun événement trouvé pour votre recherche.</Text>
-            </View>
-          }
-        />
+        {isLoading && results.length === 0 ? (
+          <View style={styles.loaderRoot}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+          </View>
+        ) : (
+          <FlatList
+            data={results}
+            keyExtractor={keyExtractor}
+            renderItem={renderItem}
+            contentContainerStyle={styles.list}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={ListEmpty}
+            initialNumToRender={8}
+            maxToRenderPerBatch={10}
+            windowSize={9}
+            removeClippedSubviews
+            keyboardShouldPersistTaps="handled"
+          />
+        )}
       </View>
     </View>
   );
@@ -151,44 +195,70 @@ export default function SearchScreen({ route, navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  header: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    paddingTop: 52, 
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: 52,
     paddingBottom: Spacing.md,
     paddingHorizontal: Spacing.md,
     gap: 12,
   },
   backBtn: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
-  searchContainer: { 
-    flex: 1, 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    backgroundColor: Colors.white, 
-    borderRadius: BorderRadius.lg, 
+  searchContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.lg,
     paddingHorizontal: Spacing.md,
     height: 48,
     gap: 8,
     ...Shadows.card,
   },
   searchInput: { flex: 1, fontSize: FontSize.md, color: Colors.textPrimary, fontFamily: Fonts.regular },
-  filterBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: Colors.white, alignItems: 'center', justifyContent: 'center', ...Shadows.card },
+  filterBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: Colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadows.card,
+  },
   content: { flex: 1, paddingHorizontal: Spacing.md },
-  resultsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: Spacing.md },
-  resultsTitle: { fontSize: FontSize.xs, fontWeight: FontWeight.bold, color: Colors.textMuted, letterSpacing: 0.8, textTransform: 'uppercase' },
+  resultsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: Spacing.md,
+  },
+  resultsTitle: {
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.bold,
+    color: Colors.textMuted,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
   resultsCount: { fontSize: FontSize.xs, color: Colors.primaryLight, fontWeight: FontWeight.semibold },
   list: { paddingBottom: 20 },
-  card: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    backgroundColor: Colors.white, 
-    borderRadius: BorderRadius.lg, 
-    padding: Spacing.md, 
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
     marginBottom: Spacing.md,
     ...Shadows.card,
   },
   cardContent: { flex: 1, gap: 4 },
-  categoryBadge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, backgroundColor: Colors.tagBg },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  categoryBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    backgroundColor: Colors.tagBg,
+  },
   categoryText: { fontSize: 10, fontWeight: FontWeight.bold, color: Colors.primary },
   statusBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   statusLive: { backgroundColor: 'rgba(239, 68, 68, 0.1)' },
@@ -199,4 +269,5 @@ const styles = StyleSheet.create({
   cardMeta: { fontSize: FontSize.xs, color: Colors.textMuted },
   emptyContainer: { alignItems: 'center', justifyContent: 'center', marginTop: 100, gap: 16 },
   emptyText: { textAlign: 'center', color: Colors.textMuted, fontSize: FontSize.md, paddingHorizontal: Spacing.xl },
+  loaderRoot: { paddingVertical: 60, alignItems: 'center' },
 });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -14,57 +14,33 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
-import * as Google from 'expo-auth-session/providers/google';
-import * as WebBrowser from 'expo-web-browser';
-import { GoogleAuthProvider, signInWithCredential, signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config/firebase';
+import { useAppAlert } from '../contexts/AppAlertContext';
 
-WebBrowser.maybeCompleteAuthSession();
-
-const GOOGLE_ANDROID_CLIENT_ID = '573518128565-nfkam62jg5q5frdhi6gsb36uomjgpba1.apps.googleusercontent.com';
-const GOOGLE_IOS_CLIENT_ID = '';
-const GOOGLE_WEB_CLIENT_ID = '573518128565-kc82asdf0e8hu1gkbjpuc0bhkd1u4tfa.apps.googleusercontent.com';
+const GOOGLE_ANDROID_CLIENT_ID =
+  '573518128565-65jfo3ornibclh8om90vqgtmog6kcae4.apps.googleusercontent.com';
+const GOOGLE_WEB_CLIENT_ID =
+  '573518128565-kc82asdf0e8hu1gkbjpuc0bhkd1u4tfa.apps.googleusercontent.com';
 
 export default function SignInScreen({ navigation }: any) {
+  const { showAlert } = useAppAlert();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPwd, setShowPwd] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: GOOGLE_ANDROID_CLIENT_ID,
-    iosClientId: GOOGLE_IOS_CLIENT_ID || undefined,
-    webClientId: GOOGLE_WEB_CLIENT_ID,
-  });
-
-  useEffect(() => {
-    if (response?.type === 'success') {
-      const { id_token } = response.params;
-      const credential = GoogleAuthProvider.credential(id_token);
-      setSubmitting(true);
-      signInWithCredential(auth, credential)
-        .catch((error) => {
-          console.error(error);
-          Alert.alert('Error', 'Failed to sign in with Google');
-        })
-        .finally(() => {
-          setSubmitting(false);
-        });
-    }
-  }, [response, navigation]);
 
   const handleGoogleSignIn = () => {
-    const hasGoogleIds = Boolean(GOOGLE_ANDROID_CLIENT_ID && GOOGLE_WEB_CLIENT_ID);
-    if (!request || !hasGoogleIds) {
-      Alert.alert('Configuration requise', 'Configurez les constantes GOOGLE_*_CLIENT_ID dans SignInScreen.tsx.');
-      return;
-    }
-    promptAsync();
+    showAlert({
+      variant: 'info',
+      title: 'Bientôt disponible',
+      message: 'Continuer avec Google sera disponible dans une prochaine mise à jour.',
+    });
   };
 
   const handleSignIn = async () => {
     if (!email || !password) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs.');
+      showAlert({ variant: 'warning', title: 'Champs requis', message: 'Veuillez remplir tous les champs.' });
       return;
     }
 
@@ -73,7 +49,11 @@ export default function SignInScreen({ navigation }: any) {
       await signInWithEmailAndPassword(auth, email.trim(), password);
     } catch (error: any) {
       console.error(error);
-      Alert.alert('Erreur de connexion', error?.message || 'Connexion impossible avec ces identifiants.');
+      showAlert({
+        variant: 'error',
+        title: 'Erreur de connexion',
+        message: error?.message || 'Connexion impossible avec ces identifiants.',
+      });
     } finally {
       setSubmitting(false);
     }
@@ -91,7 +71,7 @@ export default function SignInScreen({ navigation }: any) {
 
         {/* Hero image */}
         <View style={styles.heroContainer}>
-          <Image source={require('../../assets/onboarding1.png')} style={styles.hero} resizeMode="cover" />
+          <Image source={require('../../assets/onboarding_tech_2.png')} style={styles.hero} resizeMode="cover" />
         </View>
 
         {/* Card */}
@@ -161,7 +141,7 @@ export default function SignInScreen({ navigation }: any) {
               style={[styles.socialBtn, styles.socialBtnFull]} 
               activeOpacity={0.85}
               onPress={handleGoogleSignIn}
-              disabled={!request || submitting}
+              disabled={submitting}
             >
               <Ionicons name="logo-google" size={18} color={Colors.textPrimary} />
               <Text style={styles.socialText}>Google</Text>

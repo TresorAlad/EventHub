@@ -1,28 +1,39 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  Animated,
   StatusBar,
   Dimensions,
   Image,
 } from 'react-native';
 import { Colors, FontSize, FontWeight, Fonts } from '../theme';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
 
 export default function SplashScreen({ navigation }: any) {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.85)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
+  const fade = useSharedValue(0);
+  const scale = useSharedValue(0.85);
+  const translateY = useSharedValue(30);
+
+  const centerStyle = useAnimatedStyle(() => ({
+    opacity: fade.value,
+    transform: [{ scale: scale.value }],
+  }));
+
+  const titleStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  const bottomStyle = useAnimatedStyle(() => ({
+    opacity: fade.value,
+  }));
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 900, useNativeDriver: true }),
-      Animated.spring(scaleAnim, { toValue: 1, tension: 80, friction: 8, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 700, useNativeDriver: true }),
-    ]).start();
+    fade.value = withTiming(1, { duration: 600 });
+    scale.value = withSpring(1, { damping: 10, stiffness: 260 });
+    translateY.value = withTiming(0, { duration: 500 });
 
     const timer = setTimeout(() => {
       if (navigation?.replace) {
@@ -48,19 +59,19 @@ export default function SplashScreen({ navigation }: any) {
       </View>
 
       {/* Logo */}
-      <Animated.View style={[styles.center, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
+      <Animated.View style={[styles.center, centerStyle]}>
         <Image 
           source={require('../../assets/logo.jpeg')} 
           style={styles.logoCircle} 
           resizeMode="contain"
         />
-        <Animated.Text style={[styles.appName, { transform: [{ translateY: slideAnim }] }]}>
+        <Animated.Text style={[styles.appName, titleStyle]}>
           EventHub
         </Animated.Text>
       </Animated.View>
 
       {/* Bottom */}
-      <Animated.View style={[styles.bottom, { opacity: fadeAnim }]}>
+      <Animated.View style={[styles.bottom, bottomStyle]}>
         <View style={styles.progressBarContainer}>
           <View style={styles.progressBarActive} />
           <View style={styles.progressBarInactive} />

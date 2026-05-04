@@ -1,22 +1,71 @@
 import 'react-native-gesture-handler';
-import React, { useCallback } from 'react';
+import React, { useEffect } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreenExpo from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
-import { Inter_400Regular, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold } from '@expo-google-fonts/inter';
-import { PlusJakartaSans_400Regular, PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold, PlusJakartaSans_800ExtraBold } from '@expo-google-fonts/plus-jakarta-sans';
+import {
+  Inter_400Regular,
+  Inter_600SemiBold,
+  Inter_700Bold,
+  Inter_800ExtraBold,
+} from '@expo-google-fonts/inter';
+import {
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+  PlusJakartaSans_800ExtraBold,
+} from '@expo-google-fonts/plus-jakarta-sans';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import RootNavigator from './src/navigation/RootNavigator';
+import { AuthProvider } from './src/contexts/AuthContext';
+import { asyncStoragePersister, queryClient } from './src/lib/queryClient';
+import { warmupBackend } from './src/services/api';
+import { initSentry } from './src/lib/sentry';
+import { AppAlertProvider, useAppAlert } from './src/contexts/AppAlertContext';
+import * as Updates from 'expo-updates';
 
-// Keep the splash screen visible while we fetch resources
-SplashScreenExpo.preventAutoHideAsync();
+// Garde le splash natif visible tant que polices + bootstrap auth/cache ne sont pas prêts
+SplashScreenExpo.preventAutoHideAsync().catch(() => {
+  /* déjà préventé */
+});
 
-// NOTE: @react-native-firebase/messaging is NOT compatible with Expo Go.
-// Push notifications via FCM native module require a custom dev build (expo-dev-client).
-// For Expo Go, we use expo-notifications instead (handled in useNotifications hook).
+// Pré-chauffe la lambda Vercel dès le require initial : aucun coût UI,
+// juste une requête fire-and-forget en parallèle du chargement React Native.
+warmupBackend();
+
+// NOTE: @react-native-firebase/messaging n'est PAS compatible Expo Go.
+// Pour Expo Go on utilise expo-notifications (cf. useNotifications hook).
+// En dev build, on pourra brancher FCM natif sans rework du reste.
 
 export default function App() {
-  const [fontsLoaded] = useFonts({
+  useEffect(() => {
+    initSentry();
+  }, []);
+
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={{
+          persister: asyncStoragePersister,
+          maxAge: 24 * 60 * 60 * 1000, // 24h
+          buster: 'v1',
+        }}
+      >
+        <AppAlertProvider>
+          <Bootstrap />
+        </AppAlertProvider>
+      </PersistQueryClientProvider>
+    </GestureHandlerRootView>
+  );
+}
+
+function Bootstrap() {
+  const { showAlert } = useAppAlert();
+
+  const [fontsLoaded, fontError] = useFonts({
     Inter_400Regular,
     Inter_600SemiBold,
     Inter_700Bold,
@@ -27,20 +76,49 @@ export default function App() {
     PlusJakartaSans_800ExtraBold,
   });
 
-  const onLayoutRootView = useCallback(async () => {
-    if (fontsLoaded) {
-      await SplashScreenExpo.hideAsync();
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      // Hide splash natif dès que les polices sont prêtes (succès ou échec).
+      // Évite l'écran blanc et garde une transition propre depuis le splash Expo.
+      SplashScreenExpo.hideAsync().catch(() => undefined);
     }
-  }, [fontsLoaded]);
+  }, [fontsLoaded, fontError]);
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded && !fontError) {
     return null;
   }
 
+  useEffect(() => {
+    const run = async () => {
+      try {
+        // En dev (Expo Go), `expo-updates` ne sert pas. En build, on notifie.
+        if (__DEV__) return;
+        const update = await Updates.checkForUpdateAsync();
+        if (!update.isAvailable) return;
+        showAlert({
+          variant: 'update',
+          title: 'Mise à jour disponible',
+          message: "Une nouvelle version est prête. Téléchargez-la maintenant pour avoir les dernières améliorations.",
+          primaryText: 'Mettre à jour',
+          secondaryText: 'Plus tard',
+          onPrimary: async () => {
+            await Updates.fetchUpdateAsync();
+            await Updates.reloadAsync();
+          },
+        });
+      } catch {
+        // best-effort
+      }
+    };
+    run();
+  }, [showAlert]);
+
   return (
-    <NavigationContainer onReady={onLayoutRootView}>
-      <StatusBar style="auto" />
-      <RootNavigator />
-    </NavigationContainer>
+    <AuthProvider>
+      <NavigationContainer>
+        <StatusBar style="auto" />
+        <RootNavigator />
+      </NavigationContainer>
+    </AuthProvider>
   );
 }

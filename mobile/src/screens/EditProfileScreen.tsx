@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
   TouchableOpacity, StatusBar, TextInput,
-  Image, Alert, KeyboardAvoidingView, Platform,
+  Image, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows, Fonts } from '../theme';
@@ -11,9 +11,12 @@ import { auth } from '../config/firebase';
 import { updateEmail } from 'firebase/auth';
 import * as ImagePicker from 'expo-image-picker';
 import { updateProfile as updateProfileApi, uploadAvatar } from '../services/api';
+import EventImage from '../components/EventImage';
+import { useAppAlert } from '../contexts/AppAlertContext';
 
 export default function EditProfileScreen({ navigation }: any) {
   const { dbUser, refreshUser } = useAuth();
+  const { showAlert } = useAppAlert();
   const isOrganizer = dbUser?.role === 'ORGANIZER' || dbUser?.role === 'ADMIN';
 
   const [organizerName, setOrganizerName] = useState('');
@@ -43,7 +46,11 @@ export default function EditProfileScreen({ navigation }: any) {
   const pickAvatar = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert('Permission', 'Autorise l’accès à tes photos pour changer ton avatar.');
+      showAlert({
+        variant: 'warning',
+        title: 'Permission requise',
+        message: "Autorise l’accès à tes photos pour changer ton avatar.",
+      });
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -97,14 +104,14 @@ export default function EditProfileScreen({ navigation }: any) {
 
       await updateProfileApi(payload);
       await refreshUser();
-      Alert.alert('Succès', 'Profil mis à jour avec succès !');
+      showAlert({ variant: 'success', title: 'Succès', message: 'Profil mis à jour avec succès !' });
       navigation.goBack();
     } catch (e: any) {
       const msg =
         e?.code === 'auth/requires-recent-login'
           ? "Pour modifier l'email, reconnecte-toi puis réessaie."
           : e?.response?.data?.message || e?.message || 'Impossible de sauvegarder le profil.';
-      Alert.alert('Erreur', msg);
+      showAlert({ variant: 'error', title: 'Erreur', message: msg });
     } finally {
       setSaving(false);
     }
@@ -133,10 +140,7 @@ export default function EditProfileScreen({ navigation }: any) {
           {/* Avatar Section */}
           <View style={styles.avatarSection}>
             <View style={styles.avatarWrapper}>
-              <Image 
-                source={avatarSource} 
-                style={styles.avatar} 
-              />
+              <EventImage source={avatarSource} style={styles.avatar} />
               <TouchableOpacity style={styles.editBadge} onPress={pickAvatar} activeOpacity={0.85}>
                 <Ionicons name="camera" size={20} color={Colors.white} />
               </TouchableOpacity>

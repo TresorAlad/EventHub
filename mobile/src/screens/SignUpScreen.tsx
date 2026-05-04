@@ -17,17 +17,21 @@ import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '..
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAppAlert } from '../contexts/AppAlertContext';
 
 type UserType = 'User' | 'Organizer' | null;
 const SIGNUP_ROLE_KEY = 'eventhub:signupDesiredRole';
 const SIGNUP_ORG_NAME_KEY = 'eventhub:signupOrganizationName';
 
 export default function SignUpScreen({ navigation }: any) {
+  const { showAlert } = useAppAlert();
   const [userType, setUserType] = useState<UserType>(null);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   
   // Organizer specific
@@ -36,15 +40,27 @@ export default function SignUpScreen({ navigation }: any) {
 
   const handleSignUp = async () => {
     if (!fullName || !email || !password) {
-      Alert.alert('Champs requis', 'Merci de remplir le nom, email et mot de passe.');
+      showAlert({
+        variant: 'warning',
+        title: 'Champs requis',
+        message: 'Merci de remplir le nom, email et mot de passe.',
+      });
       return;
     }
     if (password !== confirmPassword) {
-      Alert.alert('Mot de passe', 'Les mots de passe ne correspondent pas.');
+      showAlert({
+        variant: 'warning',
+        title: 'Mot de passe',
+        message: 'Les mots de passe ne correspondent pas.',
+      });
       return;
     }
     if (password.length < 6) {
-      Alert.alert('Mot de passe faible', 'Le mot de passe doit contenir au moins 6 caractères.');
+      showAlert({
+        variant: 'warning',
+        title: 'Mot de passe faible',
+        message: 'Le mot de passe doit contenir au moins 6 caractères.',
+      });
       return;
     }
 
@@ -66,7 +82,11 @@ export default function SignUpScreen({ navigation }: any) {
       }
     } catch (error: any) {
       console.error(error);
-      Alert.alert('Inscription impossible', error?.message || 'Veuillez réessayer.');
+      showAlert({
+        variant: 'error',
+        title: 'Inscription impossible',
+        message: error?.message || 'Veuillez réessayer.',
+      });
     } finally {
       setSubmitting(false);
     }
@@ -138,7 +158,7 @@ export default function SignUpScreen({ navigation }: any) {
         </TouchableOpacity>
 
         <View style={styles.heroContainer}>
-          <Image source={require('../../assets/onboarding1.png')} style={styles.hero} resizeMode="cover" />
+          <Image source={require('../../assets/onboarding_tech_2.png')} style={styles.hero} resizeMode="cover" />
         </View>
 
         <View style={styles.card}>
@@ -210,11 +230,14 @@ export default function SignUpScreen({ navigation }: any) {
               <Ionicons name="lock-closed-outline" size={20} color={Colors.textMuted} />
               <TextInput 
                 style={styles.inputText} 
-                secureTextEntry
+                secureTextEntry={!showPassword}
                 placeholder="********"
                 value={password}
                 onChangeText={setPassword}
               />
+              <TouchableOpacity onPress={() => setShowPassword((v) => !v)}>
+                <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={Colors.textMuted} />
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -224,11 +247,18 @@ export default function SignUpScreen({ navigation }: any) {
               <Ionicons name="lock-closed-outline" size={20} color={Colors.textMuted} />
               <TextInput
                 style={styles.inputText}
-                secureTextEntry
+                secureTextEntry={!showConfirmPassword}
                 placeholder="********"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
               />
+              <TouchableOpacity onPress={() => setShowConfirmPassword((v) => !v)}>
+                <Ionicons
+                  name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
+                  size={20}
+                  color={Colors.textMuted}
+                />
+              </TouchableOpacity>
             </View>
           </View>
 

@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
+import EventImage from './EventImage';
 
 interface EventCardProps {
   category: string;
@@ -14,11 +15,11 @@ interface EventCardProps {
   onPress?: () => void;
 }
 
-export default function EventCard({ category, title, time, location, price, image, status, onPress }: EventCardProps) {
+function EventCard({ category, title, time, location, price, image, status, onPress }: EventCardProps) {
   const isExpired = status === 'Expired' || status === 'Past';
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.9}>
-      <Image source={image} style={styles.image} />
+      <EventImage source={image} style={styles.image} />
       <View style={styles.info}>
         <View style={styles.headerRow}>
           <Text style={styles.category}>{category}</Text>
@@ -60,6 +61,8 @@ export default function EventCard({ category, title, time, location, price, imag
     </TouchableOpacity>
   );
 }
+
+export default React.memo(EventCard);
 
 const styles = StyleSheet.create({
   card: {

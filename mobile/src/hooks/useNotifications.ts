@@ -3,7 +3,7 @@ import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import api from '../services/api';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 // Configure how notifications are displayed when the app is in the foreground
 Notifications.setNotificationHandler({
@@ -17,17 +17,23 @@ Notifications.setNotificationHandler({
 });
 
 export const useNotifications = (user: any) => {
+  const lastRegisteredUid = useRef<string | null>(null);
   useEffect(() => {
-    if (user) {
-      registerForPushNotificationsAsync().then(token => {
-        if (token) {
-          api.post('/auth/push-token', { pushToken: token }).catch(err => {
-            console.warn('Could not register push token:', err?.message);
-          });
-        }
-      });
+    const uid = user?.uid ? String(user.uid) : null;
+    if (!uid) {
+      lastRegisteredUid.current = null;
+      return;
     }
-  }, [user]);
+    if (lastRegisteredUid.current === uid) return;
+
+    registerForPushNotificationsAsync().then((token) => {
+      if (!token) return;
+      api.post('/auth/push-token', { pushToken: token }).catch((err) => {
+        console.warn('Could not register push token:', err?.message);
+      });
+      lastRegisteredUid.current = uid;
+    });
+  }, [user?.uid]);
 };
 
 async function registerForPushNotificationsAsync() {
@@ -64,11 +70,10 @@ async function registerForPushNotificationsAsync() {
     }
 
     try {
-      const tokenData = await Notifications.getExpoPushTokenAsync({
-        projectId: '17fffcd6-8217-4124-893d-770b12678adc',
-      });
+      // Firebase (FCM) direct: device push token (Android => FCM)
+      const tokenData = await Notifications.getDevicePushTokenAsync();
       token = tokenData.data;
-      console.log('Expo Push Token:', token);
+      console.log('FCM Token:', token);
     } catch (err) {
       console.warn('Erreur lors de la récupération du push token:', err);
     }

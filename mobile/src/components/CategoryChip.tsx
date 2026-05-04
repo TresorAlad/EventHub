@@ -8,7 +8,7 @@ interface CategoryChipProps {
   onPress?: () => void;
 }
 
-export default function CategoryChip({ label, active = false, onPress }: CategoryChipProps) {
+function CategoryChip({ label, active = false, onPress }: CategoryChipProps) {
   return (
     <TouchableOpacity
       style={[styles.chip, active && styles.active]}
@@ -19,6 +19,8 @@ export default function CategoryChip({ label, active = false, onPress }: Categor
     </TouchableOpacity>
   );
 }
+
+export default React.memo(CategoryChip);
 
 const styles = StyleSheet.create({
   chip: {

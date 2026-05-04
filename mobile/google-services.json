@@ -12,7 +12,20 @@
           "package_name": "com.eventhub.togo"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "573518128565-65jfo3ornibclh8om90vqgtmog6kcae4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.eventhub.togo",
+            "certificate_hash": "472f6a0e8b0798b2e989c8b740f8fa40f69b9ee6"
+          }
+        },
+        {
+          "client_id": "573518128565-kc82asdf0e8hu1gkbjpuc0bhkd1u4tfa.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyD8diuE9DafkW2Q8yGelyVbuOdQ_vxQ0Vg"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "573518128565-kc82asdf0e8hu1gkbjpuc0bhkd1u4tfa.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
