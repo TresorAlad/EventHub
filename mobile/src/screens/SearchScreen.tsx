@@ -9,7 +9,7 @@ import {
   TextInput,
   ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '../components/ui/AppIcon';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows, Fonts } from '../theme';
 import { useEventsQuery } from '../lib/queries';
 
@@ -77,7 +77,7 @@ export default function SearchScreen({ route, navigation }: any) {
                   styles.statusBadge,
                   status === 'Live'
                     ? styles.statusLive
-                    : status === 'Expired'
+                    : status === 'Past'
                       ? styles.statusExpired
                       : styles.statusUpcoming,
                 ]}
@@ -89,7 +89,7 @@ export default function SearchScreen({ route, navigation }: any) {
                       color:
                         status === 'Live'
                           ? '#ef4444'
-                          : status === 'Expired'
+                          : status === 'Past'
                             ? '#64748b'
                             : '#38bdf8',
                     },
@@ -106,7 +106,7 @@ export default function SearchScreen({ route, navigation }: any) {
               {start.toLocaleDateString('fr-FR')} • {item.location || 'En Ligne'}
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+          <AppIcon name="chevron-forward" size={20} color={Colors.textMuted} />
         </TouchableOpacity>
       );
     },
@@ -116,7 +116,7 @@ export default function SearchScreen({ route, navigation }: any) {
   const ListEmpty = useMemo(
     () => (
       <View style={styles.emptyContainer}>
-        <Ionicons name="search-outline" size={64} color={Colors.textMuted} />
+        <AppIcon name="search-outline" size={64} color={Colors.textMuted} />
         <Text style={styles.emptyText}>
           {isLoading ? 'Chargement...' : 'Aucun événement trouvé pour votre recherche.'}
         </Text>
@@ -131,10 +131,10 @@ export default function SearchScreen({ route, navigation }: any) {
 
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={goBack}>
-          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+          <AppIcon name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
         <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color={Colors.textMuted} />
+          <AppIcon name="search" size={20} color={Colors.textMuted} />
           <TextInput
             style={styles.searchInput}
             placeholder={
@@ -146,12 +146,12 @@ export default function SearchScreen({ route, navigation }: any) {
           />
           {searchQuery !== '' && (
             <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={18} color={Colors.textMuted} />
+              <AppIcon name="close-circle" size={18} color={Colors.textMuted} />
             </TouchableOpacity>
           )}
         </View>
         <TouchableOpacity style={styles.filterBtn} onPress={goToFilter}>
-          <Ionicons name="options-outline" size={22} color={Colors.primary} />
+          <AppIcon name="options-outline" size={22} color={Colors.primary} />
         </TouchableOpacity>
       </View>
 

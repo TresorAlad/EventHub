@@ -12,7 +12,7 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '../components/ui/AppIcon';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config/firebase';
@@ -83,7 +83,7 @@ export default function SignInScreen({ navigation }: any) {
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Email Address</Text>
             <View style={styles.inputBox}>
-              <Ionicons name="at-outline" size={20} color={Colors.textMuted} />
+              <AppIcon name="at-outline" size={20} color={Colors.textMuted} />
               <TextInput 
                 style={styles.inputText} 
                 placeholder="name@company.tg"
@@ -104,7 +104,7 @@ export default function SignInScreen({ navigation }: any) {
               </TouchableOpacity>
             </View>
             <View style={styles.inputBox}>
-              <Ionicons name="lock-closed-outline" size={20} color={Colors.textMuted} />
+              <AppIcon name="lock-closed-outline" size={20} color={Colors.textMuted} />
               <TextInput 
                 style={styles.inputText} 
                 placeholder="********"
@@ -113,7 +113,7 @@ export default function SignInScreen({ navigation }: any) {
                 secureTextEntry={!showPwd}
               />
               <TouchableOpacity onPress={() => setShowPwd(!showPwd)}>
-                <Ionicons name={showPwd ? "eye-off-outline" : "eye-outline"} size={20} color={Colors.textMuted} />
+                <AppIcon name={showPwd ? "eye-off-outline" : "eye-outline"} size={20} color={Colors.textMuted} />
               </TouchableOpacity>
             </View>
           </View>
@@ -143,7 +143,7 @@ export default function SignInScreen({ navigation }: any) {
               onPress={handleGoogleSignIn}
               disabled={submitting}
             >
-              <Ionicons name="logo-google" size={18} color={Colors.textPrimary} />
+              <AppIcon name="logo-google" size={18} color={Colors.textPrimary} />
               <Text style={styles.socialText}>Google</Text>
             </TouchableOpacity>
           </View>

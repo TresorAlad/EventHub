@@ -1,8 +1,8 @@
 import React, { useCallback, useMemo } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, StyleSheet, Text } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { Colors, Shadows } from '../theme';
+import AppIcon from '../components/ui/AppIcon';
 
 import HomeScreen from '../screens/HomeScreen';
 import DashboardScreen from '../screens/DashboardScreen';
@@ -12,9 +12,7 @@ import { useAuth } from '../hooks/useAuth';
 
 const Tab = createBottomTabNavigator();
 
-type IconName = keyof typeof Ionicons.glyphMap;
-
-const ICONS: Record<string, { active: IconName; inactive: IconName }> = {
+const ICONS: Record<string, { active: any; inactive: any }> = {
   Home: { active: 'home', inactive: 'home-outline' },
   Dashboard: { active: 'grid', inactive: 'grid-outline' },
   Alerts: { active: 'notifications', inactive: 'notifications-outline' },
@@ -38,11 +36,11 @@ const TabIcon: React.FC<{ routeName: string; focused: boolean; color: string }> 
     if (focused) {
       return (
         <View style={styles.activeIconWrapper}>
-          <Ionicons name={iconName} size={22} color={Colors.white} />
+          <AppIcon name={iconName} size={22} color={Colors.white} />
         </View>
       );
     }
-    return <Ionicons name={iconName} size={22} color={color} />;
+    return <AppIcon name={iconName} size={22} color={color} />;
   }
 );
 TabIcon.displayName = 'TabIcon';

@@ -8,7 +8,7 @@ import {
   Image,
   FlatList,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '../components/ui/AppIcon';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
 import { useEventStatsQuery } from '../lib/queries';
 
@@ -48,17 +48,17 @@ export default function OrganizerEventDashboardScreen({ route, navigation }: any
         <Text style={styles.sectionTitle}>Statistiques Rapides</Text>
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
-            <Ionicons name="people" size={28} color="#0ea5e9" />
+            <AppIcon name="people" size={28} color="#0ea5e9" />
             <Text style={styles.statValue}>{stats?.registrations || 0}</Text>
             <Text style={styles.statLabel}>Inscriptions</Text>
           </View>
           <View style={styles.statCard}>
-            <Ionicons name="heart" size={28} color="#ef4444" />
+            <AppIcon name="heart" size={28} color="#ef4444" />
             <Text style={styles.statValue}>{stats?.favorites || 0}</Text>
             <Text style={styles.statLabel}>Favoris</Text>
           </View>
           <View style={styles.statCard}>
-            <Ionicons name="share-social" size={28} color="#10b981" />
+            <AppIcon name="share-social" size={28} color="#10b981" />
             <Text style={styles.statValue}>{stats?.shares || 0}</Text>
             <Text style={styles.statLabel}>Partages</Text>
           </View>
@@ -75,7 +75,7 @@ export default function OrganizerEventDashboardScreen({ route, navigation }: any
   const ListEmpty = useMemo(
     () => (
       <View style={styles.emptyBox}>
-        <Ionicons name="person-outline" size={40} color={Colors.textMuted} />
+        <AppIcon name="person-outline" size={40} color={Colors.textMuted} />
         <Text style={styles.emptyText}>Aucun inscrit pour le moment.</Text>
       </View>
     ),
@@ -86,7 +86,7 @@ export default function OrganizerEventDashboardScreen({ route, navigation }: any
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={goBack}>
-          <Ionicons name="arrow-back" size={24} color={Colors.white} />
+          <AppIcon name="arrow-back" size={24} color={Colors.white} />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>
           Tableau de bord : {event.title}

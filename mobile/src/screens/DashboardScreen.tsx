@@ -8,7 +8,7 @@ import {
   Image,
   RefreshControl,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '../components/ui/AppIcon';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
 import React, { useCallback, useMemo } from 'react';
 import { useEventsQuery, useDeleteEvent } from '../lib/queries';
@@ -112,10 +112,10 @@ export default function DashboardScreen({ navigation }: any) {
 
           <View style={styles.actionsCol}>
             <TouchableOpacity onPress={() => goToEdit(ev)} style={styles.editBtn}>
-              <Ionicons name="pencil-outline" size={20} color="#0ea5e9" />
+              <AppIcon name="pencil-outline" size={20} color="#0ea5e9" />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => handleDelete(ev.id)} style={styles.delBtn}>
-              <Ionicons name="trash-outline" size={20} color="#ef4444" />
+              <AppIcon name="trash-outline" size={20} color="#ef4444" />
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -131,7 +131,7 @@ export default function DashboardScreen({ navigation }: any) {
           <Image source={require('../../assets/logo.jpeg')} style={styles.avatar} />
           <Text style={styles.appName}>EventHub</Text>
           <TouchableOpacity style={styles.searchIcon} onPress={goToSearch}>
-            <Ionicons name="search-outline" size={22} color={Colors.primary} />
+            <AppIcon name="search-outline" size={22} color={Colors.primary} />
           </TouchableOpacity>
         </View>
 
@@ -167,7 +167,7 @@ export default function DashboardScreen({ navigation }: any) {
   const ListEmpty = useMemo(
     () => (
       <View style={styles.emptyBox}>
-        <Ionicons name="calendar-outline" size={18} color={Colors.textMuted} />
+        <AppIcon name="calendar-outline" size={18} color={Colors.textMuted} />
         <Text style={styles.emptyText}>Aucun événement à afficher.</Text>
       </View>
     ),
@@ -200,7 +200,7 @@ export default function DashboardScreen({ navigation }: any) {
       />
 
       <TouchableOpacity style={styles.fab} onPress={goToCreate}>
-        <Ionicons name="add" size={28} color={Colors.white} />
+        <AppIcon name="add" size={28} color={Colors.white} />
       </TouchableOpacity>
     </View>
   );

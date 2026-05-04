@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, ScrollView,
   TouchableOpacity, Image, StatusBar, Linking, Modal,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '../components/ui/AppIcon';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
 import { useAuth } from '../hooks/useAuth';
 import { getEventInteractions, registerToEvent, toggleFavorite, toggleFollowOrganizer, unregisterFromEvent } from '../services/api';
@@ -130,7 +130,7 @@ export default function EventDetailsScreen({ navigation, route }: any) {
       <Modal visible={imageOpen} transparent animationType="fade" onRequestClose={() => setImageOpen(false)}>
         <View style={styles.imageModalBackdrop}>
           <TouchableOpacity style={styles.imageModalClose} onPress={() => setImageOpen(false)} activeOpacity={0.9}>
-            <Ionicons name="close" size={22} color={Colors.white} />
+            <AppIcon name="close" size={22} color={Colors.white} />
           </TouchableOpacity>
           <EventImage source={bannerImage} style={styles.imageModalImg} contentFit="contain" />
         </View>
@@ -144,7 +144,7 @@ export default function EventDetailsScreen({ navigation, route }: any) {
           <View style={styles.coverOverlay} />
           <View style={styles.topBar}>
             <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-              <Ionicons name="arrow-back" size={22} color={Colors.primary} />
+              <AppIcon name="arrow-back" size={22} color={Colors.primary} />
             </TouchableOpacity>
             <Text style={styles.topTitle}>EventHub</Text>
             <View style={styles.topRight}>
@@ -154,10 +154,10 @@ export default function EventDetailsScreen({ navigation, route }: any) {
                   showAlert({ variant: 'success', title: 'Partager', message: "Lien de l'événement copié !" })
                 }
               >
-                <Ionicons name="share-social-outline" size={20} color={Colors.primary} />
+                <AppIcon name="share-social-outline" size={20} color={Colors.primary} />
               </TouchableOpacity>
               <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Search')}>
-                <Ionicons name="search-outline" size={20} color={Colors.primary} />
+                <AppIcon name="search-outline" size={20} color={Colors.primary} />
               </TouchableOpacity>
               <Image 
                 source={require('../../assets/logo.jpeg')} 
@@ -206,7 +206,7 @@ export default function EventDetailsScreen({ navigation, route }: any) {
 
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
-              <View style={styles.infoIcon}><Ionicons name="calendar-outline" size={20} color={Colors.primary} /></View>
+              <View style={styles.infoIcon}><AppIcon name="calendar-outline" size={20} color={Colors.primary} /></View>
               <View>
                 <Text style={styles.infoTitle}>{eventDate.toLocaleDateString('fr-FR')}</Text>
                 <Text style={styles.infoSub}>{eventDate.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})} GMT</Text>
@@ -215,10 +215,10 @@ export default function EventDetailsScreen({ navigation, route }: any) {
             <View style={styles.divider} />
             <View style={styles.infoRow}>
               <View style={styles.infoIcon}>
-                <Ionicons 
-                  name={participationMode === 'Online' || participationMode === 'online' ? "videocam-outline" : "location-outline"} 
-                  size={20} 
-                  color={Colors.primary} 
+                <AppIcon
+                  name={participationMode === 'Online' || participationMode === 'online' ? 'videocam-outline' : 'location-outline'}
+                  size={20}
+                  color={Colors.primary}
                 />
               </View>
               <View>
@@ -246,10 +246,10 @@ export default function EventDetailsScreen({ navigation, route }: any) {
                 }
               }}
             >
-              <Ionicons 
-                name={participationMode === 'Online' || participationMode === 'online' ? "link-outline" : "map-outline"} 
-                size={32} 
-                color={Colors.textMuted} 
+              <AppIcon
+                name={participationMode === 'Online' || participationMode === 'online' ? 'link-outline' : 'map-outline'}
+                size={32}
+                color={Colors.textMuted}
               />
             </TouchableOpacity>
           </View>
@@ -296,7 +296,7 @@ export default function EventDetailsScreen({ navigation, route }: any) {
             }
           }}
         >
-          <Ionicons name={favorited ? 'bookmark' : 'bookmark-outline'} size={22} color={Colors.textPrimary} />
+          <AppIcon name={favorited ? 'bookmark' : 'bookmark-outline'} size={22} color={Colors.textPrimary} />
         </TouchableOpacity>
         
         {isOrganizer ? (
@@ -309,7 +309,7 @@ export default function EventDetailsScreen({ navigation, route }: any) {
                 message: `Vous avez actuellement ${event.attendees || 0} participants inscrits.\n\nLe dashboard de tracking sera disponible dans une prochaine mise à jour.`,
               })
             }>
-            <Ionicons name="people" size={20} color="#fff" />
+            <AppIcon name="people" size={20} color="#fff" />
             <Text style={styles.registerText}>Suivre les inscrits ({event.attendees || 0})</Text>
           </TouchableOpacity>
         ) : (

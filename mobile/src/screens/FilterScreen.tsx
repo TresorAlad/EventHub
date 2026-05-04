@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, ScrollView,
   TouchableOpacity, StatusBar, Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '../components/ui/AppIcon';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows, Fonts } from '../theme';
 
 const CATEGORIES = ['All', 'Tech', 'Music', 'Business', 'Arts', 'Sports', 'Food'];
@@ -29,7 +29,7 @@ export default function FilterScreen({ navigation }: any) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.closeBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="close" size={24} color={Colors.primary} />
+          <AppIcon name="close" size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Filters</Text>
         <TouchableOpacity onPress={handleReset}>

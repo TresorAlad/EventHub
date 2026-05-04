@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from './ui/AppIcon';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing } from '../theme';
 import EventImage from './EventImage';
 
@@ -43,7 +43,7 @@ function TrendingCard({ category, title, subtitle, date, time, image, status, on
             {title}
           </Text>
           <View style={styles.meta}>
-            <Ionicons name="calendar-outline" size={13} color="rgba(255,255,255,0.8)" />
+            <AppIcon name="calendar-outline" size={13} color="rgba(255,255,255,0.8)" />
             <Text style={styles.metaText}>
               {date}
               {time ? ` • ${time}` : ''}

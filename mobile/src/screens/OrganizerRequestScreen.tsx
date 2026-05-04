@@ -10,7 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '../components/ui/AppIcon';
 import { BorderRadius, Colors, FontSize, FontWeight, Shadows, Spacing } from '../theme';
 import { useAuth } from '../hooks/useAuth';
 import { getMyOrganizerRequest, submitOrganizerRequest } from '../services/api';
@@ -116,7 +116,7 @@ export default function OrganizerRequestScreen({ navigation }: any) {
 
         <View style={styles.header}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.9}>
-            <Ionicons name="arrow-back" size={22} color={Colors.primary} />
+            <AppIcon name="arrow-back" size={22} color={Colors.primary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Demande Organisateur</Text>
           <View style={{ width: 44 }} />
@@ -146,7 +146,7 @@ export default function OrganizerRequestScreen({ navigation }: any) {
             <View style={styles.field}>
               <Text style={styles.label}>Nom de la communauté</Text>
               <View style={styles.inputBox}>
-                <Ionicons name="people-outline" size={18} color={Colors.textMuted} />
+                <AppIcon name="people-outline" size={18} color={Colors.textMuted} />
                 <TextInput
                   style={styles.input}
                   value={communityName}
@@ -159,7 +159,7 @@ export default function OrganizerRequestScreen({ navigation }: any) {
             <View style={styles.field}>
               <Text style={styles.label}>Description</Text>
               <View style={[styles.inputBox, { alignItems: 'flex-start' }]}>
-                <Ionicons name="document-text-outline" size={18} color={Colors.textMuted} style={{ marginTop: 3 }} />
+                <AppIcon name="document-text-outline" size={18} color={Colors.textMuted} style={{ marginTop: 3 }} />
                 <TextInput
                   style={[styles.input, { minHeight: 110 }]}
                   value={description}
@@ -174,7 +174,7 @@ export default function OrganizerRequestScreen({ navigation }: any) {
             <View style={styles.field}>
               <Text style={styles.label}>Téléphone</Text>
               <View style={styles.inputBox}>
-                <Ionicons name="call-outline" size={18} color={Colors.textMuted} />
+                <AppIcon name="call-outline" size={18} color={Colors.textMuted} />
                 <TextInput
                   style={styles.input}
                   value={phone}
@@ -188,7 +188,7 @@ export default function OrganizerRequestScreen({ navigation }: any) {
             <View style={styles.field}>
               <Text style={styles.label}>Site web (optionnel)</Text>
               <View style={styles.inputBox}>
-                <Ionicons name="globe-outline" size={18} color={Colors.textMuted} />
+                <AppIcon name="globe-outline" size={18} color={Colors.textMuted} />
                 <TextInput
                   style={styles.input}
                   value={website}
@@ -202,7 +202,7 @@ export default function OrganizerRequestScreen({ navigation }: any) {
             <View style={styles.field}>
               <Text style={styles.label}>Document / lien preuve (optionnel)</Text>
               <View style={styles.inputBox}>
-                <Ionicons name="link-outline" size={18} color={Colors.textMuted} />
+                <AppIcon name="link-outline" size={18} color={Colors.textMuted} />
                 <TextInput
                   style={styles.input}
                   value={proofUrl}

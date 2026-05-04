@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, StatusBar, Image, ActivityIndicator, KeyboardAvoidingView, Platform, LayoutAnimation, UIManager, Switch
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '../components/ui/AppIcon';
 import * as ImagePicker from 'expo-image-picker';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
 import { createEvent, updateEvent } from '../services/api';
@@ -159,7 +159,7 @@ export default function CreateEventScreen({ route, navigation }: any) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={step === 1 ? () => navigation.goBack() : prevStep} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
+          <AppIcon name="arrow-back" size={24} color={Colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Étape {step} sur {TOTAL_STEPS}</Text>
         <View style={{ width: 40 }} />
@@ -177,7 +177,7 @@ export default function CreateEventScreen({ route, navigation }: any) {
                 <EventImage source={{ uri: image }} style={styles.coverImage} />
               ) : (
                 <View style={styles.imagePlaceholder}>
-                  <Ionicons name="image-outline" size={32} color={Colors.primary} />
+                  <AppIcon name="image-outline" size={32} color={Colors.primary} />
                   <Text style={styles.imagePlaceholderText}>Ajouter une bannière (16:9)</Text>
                 </View>
               )}
@@ -250,7 +250,7 @@ export default function CreateEventScreen({ route, navigation }: any) {
                 { id: 'hybrid', title: 'Hybride', icon: 'planet' }
               ].map((type) => (
                 <TouchableOpacity key={type.id} style={[styles.cardSelector, eventType === type.id && styles.cardSelectorActive]} onPress={() => setEventType(type.id as any)}>
-                  <Ionicons name={type.icon as any} size={28} color={eventType === type.id ? Colors.primary : Colors.textMuted} />
+                  <AppIcon name={type.icon as any} size={28} color={eventType === type.id ? Colors.primary : Colors.textMuted} />
                   <Text style={[styles.cardSelectorText, eventType === type.id && styles.cardSelectorTextActive]}>{type.title}</Text>
                 </TouchableOpacity>
               ))}
@@ -298,7 +298,7 @@ export default function CreateEventScreen({ route, navigation }: any) {
               </View>
             ) : (
               <View style={styles.mockDashboard}>
-                <Ionicons name="checkmark-circle" size={24} color={Colors.primary} />
+                <AppIcon name="checkmark-circle" size={24} color={Colors.primary} />
                 <Text style={styles.mockTitle}>Inscription Interne EventHub</Text>
                 <Text style={styles.mockHint}>Les utilisateurs s'inscriront en un clic via notre plateforme.</Text>
               </View>

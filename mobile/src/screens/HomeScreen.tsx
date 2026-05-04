@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '../components/ui/AppIcon';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows, Fonts } from '../theme';
 import CategoryChip from '../components/CategoryChip';
 import TrendingCard from '../components/TrendingCard';
@@ -150,7 +150,7 @@ export default function HomeScreen({ navigation }: any) {
             <Text style={styles.appName}>EventHub</Text>
           </View>
           <TouchableOpacity style={styles.searchIcon} onPress={goToSearch}>
-            <Ionicons name="search-outline" size={22} color={Colors.primary} />
+            <AppIcon name="search-outline" size={22} color={Colors.primary} />
           </TouchableOpacity>
         </View>
 
@@ -161,7 +161,7 @@ export default function HomeScreen({ navigation }: any) {
         </View>
 
         <View style={styles.searchBar}>
-          <Ionicons name="search-outline" size={18} color={Colors.textMuted} />
+          <AppIcon name="search-outline" size={18} color={Colors.textMuted} />
           <TextInput
             style={styles.searchInput}
             placeholder="Rechercher des hackathons, pitchs..."
@@ -172,7 +172,7 @@ export default function HomeScreen({ navigation }: any) {
             onSubmitEditing={() => navigation.navigate('Search', { initialQuery: searchQuery })}
           />
           <TouchableOpacity style={styles.filterBtn} onPress={goToFilter}>
-            <Ionicons name="options-outline" size={20} color={Colors.white} />
+            <AppIcon name="options-outline" size={20} color={Colors.white} />
           </TouchableOpacity>
         </View>
 
@@ -277,7 +277,7 @@ export default function HomeScreen({ navigation }: any) {
 
       {isOrganizer && dbUser && (
         <TouchableOpacity style={styles.fab} onPress={goToCreate} activeOpacity={0.88}>
-          <Ionicons name="add" size={28} color={Colors.white} />
+          <AppIcon name="add" size={28} color={Colors.white} />
         </TouchableOpacity>
       )}
     </View>

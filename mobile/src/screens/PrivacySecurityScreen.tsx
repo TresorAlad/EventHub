@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, ScrollView,
   TouchableOpacity, StatusBar, Switch,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '../components/ui/AppIcon';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows, Fonts } from '../theme';
 
 export default function PrivacySecurityScreen({ navigation }: any) {
@@ -17,7 +17,7 @@ export default function PrivacySecurityScreen({ navigation }: any) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+          <AppIcon name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Privacy & Security</Text>
         <View style={{ width: 40 }} />
@@ -47,7 +47,7 @@ export default function PrivacySecurityScreen({ navigation }: any) {
               <Text style={styles.rowLabel}>Change Password</Text>
               <Text style={styles.rowDesc}>Last changed 3 months ago.</Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+            <AppIcon name="chevron-forward" size={18} color={Colors.textMuted} />
           </TouchableOpacity>
           
           <View style={[styles.row, { borderTopWidth: 1, borderTopColor: Colors.border }]}>

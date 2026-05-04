@@ -11,7 +11,7 @@ import {
   Platform,
   TextInput,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '../components/ui/AppIcon';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../config/firebase';
@@ -76,7 +76,7 @@ export default function SignUpScreen({ navigation }: any) {
         <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
 
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+          <AppIcon name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
 
         <View style={styles.heroContainer}>
@@ -90,7 +90,7 @@ export default function SignUpScreen({ navigation }: any) {
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Nom complet</Text>
             <View style={styles.inputBox}>
-              <Ionicons name="person-outline" size={20} color={Colors.textMuted} />
+              <AppIcon name="person-outline" size={20} color={Colors.textMuted} />
               <TextInput 
                 style={styles.inputText} 
                 placeholder="Ex: Kodjo Mensah"
@@ -103,7 +103,7 @@ export default function SignUpScreen({ navigation }: any) {
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Adresse Email</Text>
             <View style={styles.inputBox}>
-              <Ionicons name="at-outline" size={20} color={Colors.textMuted} />
+              <AppIcon name="at-outline" size={20} color={Colors.textMuted} />
               <TextInput 
                 style={styles.inputText} 
                 placeholder="name@email.tg"
@@ -118,7 +118,7 @@ export default function SignUpScreen({ navigation }: any) {
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Mot de passe</Text>
             <View style={styles.inputBox}>
-              <Ionicons name="lock-closed-outline" size={20} color={Colors.textMuted} />
+              <AppIcon name="lock-closed-outline" size={20} color={Colors.textMuted} />
               <TextInput 
                 style={styles.inputText} 
                 secureTextEntry={!showPassword}
@@ -127,7 +127,7 @@ export default function SignUpScreen({ navigation }: any) {
                 onChangeText={setPassword}
               />
               <TouchableOpacity onPress={() => setShowPassword((v) => !v)}>
-                <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={Colors.textMuted} />
+                <AppIcon name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={Colors.textMuted} />
               </TouchableOpacity>
             </View>
           </View>
@@ -135,7 +135,7 @@ export default function SignUpScreen({ navigation }: any) {
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Confirmer le mot de passe</Text>
             <View style={styles.inputBox}>
-              <Ionicons name="lock-closed-outline" size={20} color={Colors.textMuted} />
+              <AppIcon name="lock-closed-outline" size={20} color={Colors.textMuted} />
               <TextInput
                 style={styles.inputText}
                 secureTextEntry={!showConfirmPassword}
@@ -144,11 +144,7 @@ export default function SignUpScreen({ navigation }: any) {
                 onChangeText={setConfirmPassword}
               />
               <TouchableOpacity onPress={() => setShowConfirmPassword((v) => !v)}>
-                <Ionicons
-                  name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
-                  size={20}
-                  color={Colors.textMuted}
-                />
+                <AppIcon name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={Colors.textMuted} />
               </TouchableOpacity>
             </View>
           </View>

@@ -1,10 +1,10 @@
 import React, { useMemo } from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from './ui/AppIcon';
 import { BorderRadius, Colors, FontSize, FontWeight, Shadows, Spacing } from '../theme';
 
 export type AppAlertVariant = 'info' | 'success' | 'warning' | 'error' | 'update';
-type IconName = keyof typeof Ionicons.glyphMap;
+type IconName = React.ComponentProps<typeof AppIcon>['name'];
 
 export type AppAlertPayload = {
   title: string;
@@ -77,7 +77,7 @@ const AppModalAlert: React.FC<Props> = ({ visible, payload, onRequestClose }) =>
         <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={close} />
         <View style={styles.card}>
           <View style={[styles.iconWrap, { backgroundColor: withAlpha(cfg.accent, 0.12) }]}>
-            <Ionicons name={cfg.icon} size={28} color={cfg.accent} />
+            <AppIcon name={cfg.icon as any} size={28} color={cfg.accent} />
           </View>
 
           <Text style={styles.title}>{payload.title}</Text>

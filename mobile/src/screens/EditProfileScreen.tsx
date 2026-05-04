@@ -4,7 +4,7 @@ import {
   TouchableOpacity, StatusBar, TextInput,
   Image, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '../components/ui/AppIcon';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows, Fonts } from '../theme';
 import { useAuth } from '../hooks/useAuth';
 import { auth } from '../config/firebase';
@@ -124,7 +124,7 @@ export default function EditProfileScreen({ navigation }: any) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+          <AppIcon name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Edit Profile</Text>
         <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={saving} activeOpacity={0.9}>
@@ -142,7 +142,7 @@ export default function EditProfileScreen({ navigation }: any) {
             <View style={styles.avatarWrapper}>
               <EventImage source={avatarSource} style={styles.avatar} />
               <TouchableOpacity style={styles.editBadge} onPress={pickAvatar} activeOpacity={0.85}>
-                <Ionicons name="camera" size={20} color={Colors.white} />
+                <AppIcon name="camera" size={20} color={Colors.white} />
               </TouchableOpacity>
             </View>
             <Text style={styles.avatarHint}>Change Profile Picture</Text>
@@ -153,7 +153,7 @@ export default function EditProfileScreen({ navigation }: any) {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{isOrganizer ? "NOM DE L'ORGANISATEUR" : 'NOM COMPLET'}</Text>
               <View style={styles.inputWrapper}>
-                <Ionicons name="person-outline" size={20} color={Colors.textMuted} style={styles.inputIcon} />
+                <AppIcon name="person-outline" size={20} color={Colors.textMuted} style={styles.inputIcon} />
                 <TextInput 
                   style={styles.input}
                   value={isOrganizer ? organizerName : userName}
@@ -167,7 +167,7 @@ export default function EditProfileScreen({ navigation }: any) {
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>NOM DE L'ORGANISATION</Text>
                 <View style={styles.inputWrapper}>
-                  <Ionicons name="business-outline" size={20} color={Colors.textMuted} style={styles.inputIcon} />
+                  <AppIcon name="business-outline" size={20} color={Colors.textMuted} style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
                     value={organizationName}
@@ -181,7 +181,7 @@ export default function EditProfileScreen({ navigation }: any) {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>EMAIL</Text>
               <View style={styles.inputWrapper}>
-                <Ionicons name="mail-outline" size={20} color={Colors.textMuted} style={styles.inputIcon} />
+                <AppIcon name="mail-outline" size={20} color={Colors.textMuted} style={styles.inputIcon} />
                 <TextInput 
                   style={styles.input}
                   value={email}

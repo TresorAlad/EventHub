@@ -2,17 +2,17 @@ import {
   View, Text, StyleSheet, ScrollView,
   TouchableOpacity, StatusBar, Image, ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
 import { useAuth } from '../hooks/useAuth';
 import EventImage from '../components/EventImage';
 import { useAppAlert } from '../contexts/AppAlertContext';
 import { useState } from 'react';
+import AppIcon from '../components/ui/AppIcon';
 
 const SETTINGS = [
-  { id: 'edit', icon: 'create-outline', label: 'Modifier le profil' },
+  { id: 'edit', icon: 'pencil-outline', label: 'Modifier le profil' },
   { id: 'notif', icon: 'notifications-outline', label: 'Notifications' },
-  { id: 'privacy', icon: 'shield-outline', label: 'Sécurité & Confidentialité' },
+  { id: 'privacy', icon: 'lock-closed-outline', label: 'Sécurité & Confidentialité' },
 ];
 
 export default function ProfileScreen({ navigation, route }: any) {
@@ -26,7 +26,7 @@ export default function ProfileScreen({ navigation, route }: any) {
         <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
         <View style={styles.loginPrompt}>
           <View style={styles.iconCircle}>
-            <Ionicons name="person-circle-outline" size={80} color={Colors.primary} />
+            <AppIcon name="person-circle-outline" size={80} color={Colors.primary} />
           </View>
           <Text style={styles.promptTitle}>Rejoignez EventHub</Text>
           <Text style={styles.promptSub}>Connectez-vous pour gérer votre profil, vos favoris et vos événements.</Text>
@@ -88,7 +88,7 @@ export default function ProfileScreen({ navigation, route }: any) {
           <Text style={styles.appName}>EventHub</Text>
           <View style={styles.headerRight}>
             <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Search')}>
-              <Ionicons name="search-outline" size={22} color={Colors.primary} />
+              <AppIcon name="search-outline" size={22} color={Colors.primary} />
             </TouchableOpacity>
             <Image 
               source={require('../../assets/logo.jpeg')} 
@@ -102,7 +102,7 @@ export default function ProfileScreen({ navigation, route }: any) {
           <View style={styles.avatarWrapper}>
             <EventImage source={avatarSource} style={styles.avatarLarge} />
             <View style={styles.verifiedBadge}>
-              <Ionicons name="checkmark-circle" size={22} color="#8b5cf6" />
+              <AppIcon name="checkmark-circle" size={22} color="#8b5cf6" />
             </View>
           </View>
           <Text style={styles.name}>{displayName}</Text>
@@ -161,7 +161,7 @@ export default function ProfileScreen({ navigation, route }: any) {
             disabled={requesting}
           >
             <View style={styles.organizerContent}>
-              <Ionicons name="rocket-outline" size={24} color={Colors.white} />
+              <AppIcon name="rocket-outline" size={24} color={Colors.white} />
               <View>
                 <Text style={styles.organizerTitle}>Devenir Organisateur</Text>
                 <Text style={styles.organizerSub}>Proposez vos propres événements à la communauté.</Text>
@@ -170,7 +170,7 @@ export default function ProfileScreen({ navigation, route }: any) {
             {requesting ? (
               <ActivityIndicator color={Colors.white} />
             ) : (
-              <Ionicons name="chevron-forward" size={20} color={Colors.white} />
+              <AppIcon name="chevron-forward" size={20} color={Colors.white} />
             )}
           </TouchableOpacity>
         )}
@@ -186,10 +186,10 @@ export default function ProfileScreen({ navigation, route }: any) {
               onPress={() => handleSettingPress(s.id, s.label)}
             >
               <View style={styles.settingIcon}>
-                <Ionicons name={s.icon as any} size={20} color={Colors.primary} />
+                <AppIcon name={s.icon as any} size={20} color={Colors.primary} />
               </View>
               <Text style={styles.settingLabel}>{s.label}</Text>
-              <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+              <AppIcon name="chevron-forward" size={18} color={Colors.textMuted} />
             </TouchableOpacity>
           ))}
         </View>
@@ -206,7 +206,7 @@ export default function ProfileScreen({ navigation, route }: any) {
             }
           }}
         >
-          <Ionicons name="log-out-outline" size={20} color={Colors.textPrimary} />
+          <AppIcon name="log-out-outline" size={20} color={Colors.textPrimary} />
           <Text style={styles.logoutText}>DÉCONNEXION</Text>
         </TouchableOpacity>
       </ScrollView>

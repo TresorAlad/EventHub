@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, ScrollView,
   TouchableOpacity, StatusBar, Image,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '../components/ui/AppIcon';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
 
 export default function NotificationsScreen({ navigation }: any) {
@@ -16,7 +16,7 @@ export default function NotificationsScreen({ navigation }: any) {
           <View style={styles.avatar} />
           <Text style={styles.appName}>EventHub</Text>
           <TouchableOpacity style={styles.searchIcon} onPress={() => navigation.navigate('Search')}>
-            <Ionicons name="search-outline" size={22} color={Colors.primary} />
+            <AppIcon name="search-outline" size={22} color={Colors.primary} />
           </TouchableOpacity>
         </View>
 
@@ -25,7 +25,7 @@ export default function NotificationsScreen({ navigation }: any) {
 
         <View style={styles.emptyState}>
           <View style={styles.emptyIcon}>
-            <Ionicons name="notifications-outline" size={22} color={Colors.primary} />
+            <AppIcon name="notifications-outline" size={22} color={Colors.primary} />
           </View>
           <Text style={styles.emptyTitle}>Aucune notification</Text>
           <Text style={styles.emptyBody}>
