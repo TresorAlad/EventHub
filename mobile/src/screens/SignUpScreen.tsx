@@ -194,7 +194,6 @@ export default function SignUpScreen({ navigation }: any) {
                 style={styles.gradientBtn}
               >
                 <Text style={styles.signUpText}>{submitting ? 'Inscription...' : 'Créer mon compte'}</Text>
-                <AppIcon name="person-add" size={20} color={Colors.white} />
               </LinearGradient>
             </TouchableOpacity>
           </View>

@@ -59,34 +59,30 @@ export default function RootNavigator() {
   if (initializing) return <AuthLoadingScreen />;
 
   return (
-    <Stack.Navigator screenOptions={baseScreenOptions}>
-      {user ? (
-        // Stack pour les utilisateurs connectés
-        <>
-          <Stack.Screen name="Main" component={MainTabNavigator} options={{ animation: 'fade' }} />
-          <Stack.Screen name="EventDetails" component={EventDetailsScreen} options={cardScreenOptions} />
-          <Stack.Screen name="CreateEvent" component={CreateEventScreen} options={modalScreenOptions} />
-          <Stack.Screen name="EditEvent" component={EditEventScreen} options={modalScreenOptions} />
-          <Stack.Screen
-            name="OrganizerEventDashboard"
-            component={OrganizerEventDashboardScreen}
-            options={cardScreenOptions}
-          />
-          <Stack.Screen name="EditProfile" component={EditProfileScreen} options={cardScreenOptions} />
-          <Stack.Screen name="OrganizerRequest" component={OrganizerRequestScreen} options={cardScreenOptions} />
-          <Stack.Screen name="Search" component={SearchScreen} options={cardScreenOptions} />
-          <Stack.Screen name="Filter" component={FilterScreen} options={modalScreenOptions} />
-          <Stack.Screen name="PrivacySecurity" component={PrivacySecurityScreen} options={cardScreenOptions} />
-        </>
-      ) : (
-        // Stack pour les utilisateurs non connectés
-        <>
-          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-          <Stack.Screen name="SignIn" component={SignInScreen} />
-          <Stack.Screen name="SignUp" component={SignUpScreen} />
-          <Stack.Screen name="Splash" component={SplashScreen} options={{ animation: 'fade' }} />
-        </>
-      )}
+    <Stack.Navigator screenOptions={baseScreenOptions} initialRouteName="Main">
+      {/* Écrans principaux accessibles à tous */}
+      <Stack.Screen name="Main" component={MainTabNavigator} options={{ animation: 'fade' }} />
+      <Stack.Screen name="EventDetails" component={EventDetailsScreen} options={cardScreenOptions} />
+      <Stack.Screen name="Search" component={SearchScreen} options={cardScreenOptions} />
+      <Stack.Screen name="Filter" component={FilterScreen} options={modalScreenOptions} />
+
+      {/* Écrans d'authentification (accessibles si besoin) */}
+      <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+      <Stack.Screen name="SignIn" component={SignInScreen} />
+      <Stack.Screen name="SignUp" component={SignUpScreen} />
+      <Stack.Screen name="Splash" component={SplashScreen} options={{ animation: 'fade' }} />
+
+      {/* Écrans protégés ou spécifiques */}
+      <Stack.Screen name="CreateEvent" component={CreateEventScreen} options={modalScreenOptions} />
+      <Stack.Screen name="EditEvent" component={EditEventScreen} options={modalScreenOptions} />
+      <Stack.Screen
+        name="OrganizerEventDashboard"
+        component={OrganizerEventDashboardScreen}
+        options={cardScreenOptions}
+      />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} options={cardScreenOptions} />
+      <Stack.Screen name="OrganizerRequest" component={OrganizerRequestScreen} options={cardScreenOptions} />
+      <Stack.Screen name="PrivacySecurity" component={PrivacySecurityScreen} options={cardScreenOptions} />
     </Stack.Navigator>
   );
 }
