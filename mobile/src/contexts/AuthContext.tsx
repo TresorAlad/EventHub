@@ -21,6 +21,10 @@ export type DbUser = {
   organizationName?: string | null;
   avatar?: string | null;
   bio?: string | null;
+  communityDescription?: string | null;
+  phone?: string | null;
+  website?: string | null;
+  proofUrl?: string | null;
   _count?: {
     followers?: number;
     following?: number;

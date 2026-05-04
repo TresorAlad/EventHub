@@ -10,18 +10,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   TextInput,
-  Alert,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import AppIcon from '../components/ui/AppIcon';
-import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
+import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows, Fonts } from '../theme';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { useAppAlert } from '../contexts/AppAlertContext';
-
-const GOOGLE_ANDROID_CLIENT_ID =
-  '573518128565-65jfo3ornibclh8om90vqgtmog6kcae4.apps.googleusercontent.com';
-const GOOGLE_WEB_CLIENT_ID =
-  '573518128565-kc82asdf0e8hu1gkbjpuc0bhkd1u4tfa.apps.googleusercontent.com';
 
 export default function SignInScreen({ navigation }: any) {
   const { showAlert } = useAppAlert();
@@ -29,14 +24,6 @@ export default function SignInScreen({ navigation }: any) {
   const [password, setPassword] = useState('');
   const [showPwd, setShowPwd] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-
-  const handleGoogleSignIn = () => {
-    showAlert({
-      variant: 'info',
-      title: 'Bientôt disponible',
-      message: 'Continuer avec Google sera disponible dans une prochaine mise à jour.',
-    });
-  };
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -60,261 +47,172 @@ export default function SignInScreen({ navigation }: any) {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      
+      <LinearGradient
+        colors={[Colors.background, '#F1F5F9', '#E2E8F0']}
+        style={StyleSheet.absoluteFill}
+      />
 
-        {/* Top badge */}
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>INNOVATION HUB TOGO</Text>
-        </View>
-
-        {/* Hero image */}
-        <View style={styles.heroContainer}>
-          <Image source={require('../../assets/onboarding_tech_2.png')} style={styles.hero} resizeMode="cover" />
-        </View>
-
-        {/* Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>EventHub</Text>
-          <Text style={styles.cardSubtitle}>Your gateway to Togo's tech ecosystem</Text>
-
-          {/* Email */}
-          <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Email Address</Text>
-            <View style={styles.inputBox}>
-              <AppIcon name="at-outline" size={20} color={Colors.textMuted} />
-              <TextInput 
-                style={styles.inputText} 
-                placeholder="name@company.tg"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="always"
+        >
+          {/* Header Area */}
+          <View style={styles.headerArea}>
+            <View style={styles.logoCircle}>
+              <Image source={require('../../assets/logo.jpeg')} style={styles.logo} />
             </View>
+            <Text style={styles.title}>Bon retour !</Text>
+            <Text style={styles.subtitle}>Connectez-vous pour continuer sur EventHub Togo.</Text>
           </View>
 
-          {/* Password */}
-          <View style={styles.fieldGroup}>
-            <View style={styles.labelRow}>
-              <Text style={styles.label}>Password</Text>
-              <TouchableOpacity>
-                <Text style={styles.forgot}>Forgot?</Text>
+          {/* Form Card */}
+          <View style={styles.formCard}>
+            
+            {/* Email Field */}
+            <View style={styles.field}>
+              <Text style={styles.label}>ADRESSE EMAIL</Text>
+              <View style={styles.inputContainer}>
+                <AppIcon name="mail-outline" size={20} color={Colors.textMuted} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="votre@email.tg"
+                  placeholderTextColor="#A0AEC0"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+            </View>
+
+            {/* Password Field */}
+            <View style={styles.field}>
+              <Text style={styles.label}>MOT DE PASSE</Text>
+              <View style={styles.inputContainer}>
+                <AppIcon name="lock-closed-outline" size={20} color={Colors.textMuted} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="••••••••"
+                  placeholderTextColor="#A0AEC0"
+                  secureTextEntry={!showPwd}
+                />
+                <TouchableOpacity onPress={() => setShowPwd(!showPwd)} style={styles.pwdToggle}>
+                  <AppIcon name={showPwd ? "eye-off-outline" : "eye-outline"} size={20} color={Colors.textMuted} />
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity style={styles.forgotBtn}>
+                <Text style={styles.forgotText}>Mot de passe oublié ?</Text>
               </TouchableOpacity>
             </View>
-            <View style={styles.inputBox}>
-              <AppIcon name="lock-closed-outline" size={20} color={Colors.textMuted} />
-              <TextInput 
-                style={styles.inputText} 
-                placeholder="********"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPwd}
-              />
-              <TouchableOpacity onPress={() => setShowPwd(!showPwd)}>
-                <AppIcon name={showPwd ? "eye-off-outline" : "eye-outline"} size={20} color={Colors.textMuted} />
-              </TouchableOpacity>
-            </View>
-          </View>
 
-          {/* Sign In Button */}
-          <TouchableOpacity
-            style={styles.signInBtn}
-            onPress={handleSignIn}
-            disabled={submitting}
-            activeOpacity={0.88}
-          >
-            <Text style={styles.signInText}>Sign In →</Text>
-          </TouchableOpacity>
-
-          {/* Divider */}
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR CONTINUE WITH</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Social */}
-          <View style={styles.socialRow}>
-            <TouchableOpacity 
-              style={[styles.socialBtn, styles.socialBtnFull]} 
-              activeOpacity={0.85}
-              onPress={handleGoogleSignIn}
+            <TouchableOpacity
+              style={styles.signInBtn}
+              onPress={handleSignIn}
               disabled={submitting}
+              activeOpacity={0.8}
             >
-              <AppIcon name="logo-google" size={18} color={Colors.textPrimary} />
-              <Text style={styles.socialText}>Google</Text>
+              <LinearGradient
+                colors={[Colors.primary, '#1E293B']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.gradientBtn}
+              >
+                <Text style={styles.signInText}>{submitting ? 'Connexion...' : 'Se Connecter'}</Text>
+                <AppIcon name="arrow-forward" size={20} color={Colors.white} />
+              </LinearGradient>
             </TouchableOpacity>
           </View>
 
-          {/* Create account */}
-          <View style={styles.createRow}>
-            <Text style={styles.createText}>New to the community? </Text>
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Nouveau ici ? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-              <Text style={styles.createLink}>Create Account</Text>
+              <Text style={styles.footerLink}>Créer un compte</Text>
             </TouchableOpacity>
           </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  content: {
-    alignItems: 'center',
-    paddingBottom: 32,
-    gap: 16,
-  },
-  badge: {
-    marginTop: 52,
+  container: { flex: 1 },
+  scrollContent: { paddingHorizontal: Spacing.lg, paddingTop: 60, paddingBottom: 40 },
+  headerArea: { alignItems: 'center', marginBottom: 24 },
+  logoCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: Colors.white,
+    padding: 10,
+    marginBottom: 16,
+    ...Shadows.card,
+  },
+  logo: { width: '100%', height: '100%', borderRadius: 30 },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: Colors.primary,
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    textAlign: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: BorderRadius.full,
-    ...Shadows.card,
   },
-  badgeText: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
-    color: Colors.textPrimary,
-    letterSpacing: 1.5,
-  },
-  heroContainer: {
-    width: '90%',
-    height: 160,
-    borderRadius: BorderRadius.xl,
-    overflow: 'hidden',
-    backgroundColor: '#0d1b4b',
-  },
-  hero: {
-    width: '100%',
-    height: '100%',
-  },
-  card: {
-    width: '90%',
+  formCard: {
     backgroundColor: Colors.white,
-    borderRadius: 28,
-    padding: Spacing.lg,
-    gap: Spacing.md,
+    borderRadius: 20,
+    padding: 20,
+    gap: 20,
     ...Shadows.card,
   },
-  cardTitle: {
-    fontSize: FontSize.xxl,
-    fontWeight: FontWeight.extrabold,
-    color: Colors.primary,
-    textAlign: 'center',
-  },
-  cardSubtitle: {
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    marginTop: -8,
-  },
-  fieldGroup: {
-    gap: 6,
-  },
+  field: { gap: 8 },
   label: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.semibold,
-    color: Colors.textPrimary,
-  },
-  labelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  forgot: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
-    color: Colors.primaryLight,
-  },
-  inputBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: Colors.inputBg,
-    borderRadius: BorderRadius.full,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    paddingHorizontal: 18,
-    paddingVertical: 16,
-  },
-  inputText: {
-    flex: 1,
-    fontSize: FontSize.md,
-    color: Colors.textPrimary,
-  },
-  signInBtn: {
-    backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.full,
-    paddingVertical: 18,
-    alignItems: 'center',
-    ...Shadows.button,
-    marginTop: 4,
-  },
-  signInText: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.bold,
-    color: Colors.white,
-  },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: Colors.border,
-  },
-  dividerText: {
-    fontSize: FontSize.xs,
+    fontSize: 11,
+    fontWeight: 'bold',
     color: Colors.textMuted,
-    fontWeight: FontWeight.medium,
-    letterSpacing: 0.5,
+    letterSpacing: 1,
+    marginLeft: 4,
   },
-  socialRow: {
+  inputContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 12,
+    height: 56,
+    alignItems: 'center',
   },
-  socialBtn: {
-    flex: 1,
+  inputIcon: { marginRight: 10 },
+  input: { flex: 1, fontSize: 16, color: '#000', height: '100%' },
+  pwdToggle: { padding: 8 },
+  forgotBtn: { alignSelf: 'flex-end', marginTop: 4 },
+  forgotText: { fontSize: 13, color: Colors.primaryLight, fontWeight: '600' },
+  signInBtn: { borderRadius: 30, overflow: 'hidden', marginTop: 10 },
+  gradientBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 18,
     gap: 8,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    borderRadius: BorderRadius.full,
-    paddingVertical: 14,
-    backgroundColor: Colors.white,
   },
-  socialBtnFull: {
-    maxWidth: 420,
-  },
-  socialText: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.semibold,
-    color: Colors.textPrimary,
-  },
-  createRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-  },
-  createText: {
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-  },
-  createLink: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
-    color: Colors.primary,
-  },
+  signInText: { color: Colors.white, fontSize: 16, fontWeight: 'bold' },
+  footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 32 },
+  footerText: { fontSize: 14, color: Colors.textSecondary },
+  footerLink: { fontSize: 14, fontWeight: 'bold', color: Colors.primary },
 });

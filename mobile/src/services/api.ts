@@ -104,7 +104,17 @@ export const getProfile = async () => {
   return unwrap(response.data);
 };
 
-export const updateProfile = async (data: { name?: string; organizationName?: string; email?: string; bio?: string; avatar?: string }) => {
+export const updateProfile = async (data: {
+  name?: string;
+  organizationName?: string;
+  email?: string;
+  bio?: string;
+  avatar?: string;
+  communityDescription?: string;
+  phone?: string;
+  website?: string;
+  proofUrl?: string;
+}) => {
   const response = await api.put('/auth/profile', data);
   return unwrap(response.data);
 };
