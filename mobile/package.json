@@ -9,6 +9,8 @@
     "start:lan": "node scripts/patch-expo-tunnel-timeout.js && node scripts/print-expo-go-url.js lan && npx expo start --go --lan",
     "start:lan:clear": "node scripts/patch-expo-tunnel-timeout.js && node scripts/print-expo-go-url.js lan && npx expo start --go --lan --clear",
     "start:dev-client": "node scripts/patch-expo-tunnel-timeout.js && npx expo start --dev-client --tunnel",
+    "update:dev": "eas update --branch development --message \"dev update\"",
+    "update:prod": "eas update --branch production --message \"prod update\"",
     "android": "npx expo run:android",
     "android:open": "node scripts/open-expo-go-android.js",
     "android:reverse": "adb reverse tcp:8081 tcp:8081",

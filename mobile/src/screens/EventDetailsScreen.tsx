@@ -76,6 +76,18 @@ export default function EventDetailsScreen({ navigation, route }: any) {
         },
       });
     } else {
+      if (!dbUser) {
+        showAlert({
+          variant: 'info',
+          title: 'Connexion Requise',
+          message: 'Vous devez être connecté pour vous inscrire à cet événement.',
+          primaryText: 'Se connecter',
+          secondaryText: 'Annuler',
+          onPrimary: () => navigation.navigate('SignIn'),
+        });
+        return;
+      }
+
       if (eventExpired) {
         showAlert({
           variant: 'warning',

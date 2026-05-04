@@ -149,6 +149,11 @@ export const toggleFollowOrganizer = async (organizerId: string) => {
   return unwrap(response.data);
 };
 
+export const requestOrganizerRole = async () => {
+  const response = await api.post('/auth/request-organizer');
+  return unwrap(response.data);
+};
+
 // Warmup : ping le backend Vercel au cold start app pour éviter qu'un user hit
 // une fonction froide sur sa première vraie requête. Best-effort, ne bloque rien.
 // On pointe sur GET /events car il est public, léger, et la réponse pré-chauffe

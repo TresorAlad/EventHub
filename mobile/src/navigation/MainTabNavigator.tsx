@@ -90,7 +90,10 @@ export default function MainTabNavigator() {
     const list: { name: string; component: React.ComponentType<any> }[] = [
       { name: 'Home', component: HomeScreen },
     ];
-    if (isOrganizer) list.push({ name: 'Dashboard', component: DashboardScreen });
+    // Seuls les organisateurs voient le dashboard de gestion
+    if (isOrganizer) {
+      list.push({ name: 'Dashboard', component: DashboardScreen });
+    }
     list.push({ name: 'Alerts', component: NotificationsScreen });
     list.push({ name: 'Profile', component: ProfileScreen });
     return list;

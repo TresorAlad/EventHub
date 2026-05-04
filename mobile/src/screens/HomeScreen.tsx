@@ -275,7 +275,7 @@ export default function HomeScreen({ navigation }: any) {
         />
       )}
 
-      {isOrganizer && (
+      {isOrganizer && dbUser && (
         <TouchableOpacity style={styles.fab} onPress={goToCreate} activeOpacity={0.88}>
           <Ionicons name="add" size={28} color={Colors.white} />
         </TouchableOpacity>

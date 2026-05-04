@@ -1,12 +1,14 @@
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, StatusBar, Image,
+  TouchableOpacity, StatusBar, Image, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '../theme';
 import { useAuth } from '../hooks/useAuth';
 import EventImage from '../components/EventImage';
 import { useAppAlert } from '../contexts/AppAlertContext';
+import { requestOrganizerRole } from '../services/api';
+import { useState } from 'react';
 
 const SETTINGS = [
   { id: 'edit', icon: 'create-outline', label: 'Modifier le profil' },
@@ -15,8 +17,39 @@ const SETTINGS = [
 ];
 
 export default function ProfileScreen({ navigation, route }: any) {
-  const { logout, dbUser } = useAuth();
+  const { logout, dbUser, user, refreshUser } = useAuth();
   const { showAlert } = useAppAlert();
+  const [requesting, setRequesting] = useState(false);
+
+  if (!user || !dbUser) {
+    return (
+      <View style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
+        <View style={styles.loginPrompt}>
+          <View style={styles.iconCircle}>
+            <Ionicons name="person-circle-outline" size={80} color={Colors.primary} />
+          </View>
+          <Text style={styles.promptTitle}>Rejoignez EventHub</Text>
+          <Text style={styles.promptSub}>Connectez-vous pour gérer votre profil, vos favoris et vos événements.</Text>
+          
+          <TouchableOpacity 
+            style={styles.loginBtn}
+            onPress={() => navigation.navigate('SignIn')}
+          >
+            <Text style={styles.loginBtnText}>SE CONNECTER</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.signupBtn}
+            onPress={() => navigation.navigate('SignUp')}
+          >
+            <Text style={styles.signupBtnText}>Créer un compte</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
   const isOrganizer = dbUser?.role === 'ORGANIZER' || dbUser?.role === 'ADMIN';
   const displayName =
     isOrganizer
@@ -41,6 +74,35 @@ export default function ProfileScreen({ navigation, route }: any) {
         message: `Cette fonctionnalité "${label}" sera bientôt disponible.`,
       });
     }
+  };
+
+  const handleRequestOrganizer = async () => {
+    showAlert({
+      variant: 'info',
+      title: 'Devenir Organisateur',
+      message: 'Voulez-vous envoyer une demande pour devenir organisateur ? Vous pourrez créer et gérer vos propres événements après approbation.',
+      primaryText: 'Envoyer la demande',
+      secondaryText: 'Annuler',
+      onPrimary: async () => {
+        setRequesting(true);
+        try {
+          await requestOrganizerRole();
+          showAlert({
+            variant: 'success',
+            title: 'Demande envoyée',
+            message: 'Votre demande a été reçue. Un administrateur va l\'étudier prochainement.',
+          });
+        } catch (e: any) {
+          showAlert({
+            variant: 'error',
+            title: 'Erreur',
+            message: e?.response?.data?.message || 'Impossible d\'envoyer la demande.',
+          });
+        } finally {
+          setRequesting(false);
+        }
+      }
+    });
   };
 
   return (
@@ -115,6 +177,29 @@ export default function ProfileScreen({ navigation, route }: any) {
             </>
           )}
         </View>
+
+        {/* Organizer Promotion for simple users */}
+        {!isOrganizer && (
+          <TouchableOpacity 
+            style={styles.organizerCard} 
+            activeOpacity={0.9}
+            onPress={handleRequestOrganizer}
+            disabled={requesting}
+          >
+            <View style={styles.organizerContent}>
+              <Ionicons name="rocket-outline" size={24} color={Colors.white} />
+              <View>
+                <Text style={styles.organizerTitle}>Devenir Organisateur</Text>
+                <Text style={styles.organizerSub}>Proposez vos propres événements à la communauté.</Text>
+              </View>
+            </View>
+            {requesting ? (
+              <ActivityIndicator color={Colors.white} />
+            ) : (
+              <Ionicons name="chevron-forward" size={20} color={Colors.white} />
+            )}
+          </TouchableOpacity>
+        )}
 
         {/* Settings */}
         <Text style={styles.sectionLabel}>PARAMÈTRES DU COMPTE</Text>
@@ -204,4 +289,80 @@ const styles = StyleSheet.create({
     paddingVertical: 16, marginBottom: Spacing.lg, ...Shadows.card,
   },
   logoutText: { fontSize: FontSize.sm, fontWeight: FontWeight.bold, color: Colors.textPrimary, letterSpacing: 1 },
+  loginPrompt: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.xl,
+  },
+  iconCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: Colors.inputBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.lg,
+  },
+  promptTitle: {
+    fontSize: FontSize.xxl,
+    fontWeight: FontWeight.extrabold,
+    color: Colors.primary,
+    marginBottom: Spacing.sm,
+    textAlign: 'center',
+  },
+  promptSub: {
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: Spacing.xl,
+    lineHeight: 22,
+  },
+  loginBtn: {
+    width: '100%',
+    backgroundColor: Colors.primary,
+    paddingVertical: 16,
+    borderRadius: BorderRadius.xl,
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+    ...Shadows.button,
+  },
+  loginBtnText: {
+    color: Colors.white,
+    fontWeight: FontWeight.bold,
+    fontSize: FontSize.md,
+  },
+  signupBtn: {
+    paddingVertical: 12,
+  },
+  signupBtnText: {
+    color: Colors.primary,
+    fontWeight: FontWeight.bold,
+    fontSize: FontSize.md,
+  },
+  organizerCard: {
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.lg,
+    ...Shadows.card,
+  },
+  organizerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  organizerTitle: {
+    color: Colors.white,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.bold,
+  },
+  organizerSub: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: FontSize.xs,
+  },
 });
