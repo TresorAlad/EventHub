@@ -124,6 +124,24 @@ export const uploadAvatar = async (image: { uri: string; name: string; type: str
   return unwrap(response.data);
 };
 
+export type OrganizerRequestPayload = {
+  communityName: string;
+  description: string;
+  phone: string;
+  website?: string;
+  proofUrl?: string;
+};
+
+export const submitOrganizerRequest = async (payload: OrganizerRequestPayload) => {
+  const response = await api.post('/organizer-requests', payload);
+  return unwrap(response.data);
+};
+
+export const getMyOrganizerRequest = async () => {
+  const response = await api.get('/organizer-requests/me');
+  return unwrap(response.data);
+};
+
 export const getEventInteractions = async (eventId: string) => {
   const response = await api.get(`/interactions/events/${eventId}`);
   return unwrap(response.data);

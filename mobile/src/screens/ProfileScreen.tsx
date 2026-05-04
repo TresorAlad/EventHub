@@ -7,7 +7,6 @@ import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows } from '..
 import { useAuth } from '../hooks/useAuth';
 import EventImage from '../components/EventImage';
 import { useAppAlert } from '../contexts/AppAlertContext';
-import { requestOrganizerRole } from '../services/api';
 import { useState } from 'react';
 
 const SETTINGS = [
@@ -77,32 +76,7 @@ export default function ProfileScreen({ navigation, route }: any) {
   };
 
   const handleRequestOrganizer = async () => {
-    showAlert({
-      variant: 'info',
-      title: 'Devenir Organisateur',
-      message: 'Voulez-vous envoyer une demande pour devenir organisateur ? Vous pourrez créer et gérer vos propres événements après approbation.',
-      primaryText: 'Envoyer la demande',
-      secondaryText: 'Annuler',
-      onPrimary: async () => {
-        setRequesting(true);
-        try {
-          await requestOrganizerRole();
-          showAlert({
-            variant: 'success',
-            title: 'Demande envoyée',
-            message: 'Votre demande a été reçue. Un administrateur va l\'étudier prochainement.',
-          });
-        } catch (e: any) {
-          showAlert({
-            variant: 'error',
-            title: 'Erreur',
-            message: e?.response?.data?.message || 'Impossible d\'envoyer la demande.',
-          });
-        } finally {
-          setRequesting(false);
-        }
-      }
-    });
+    navigation.navigate('OrganizerRequest');
   };
 
   return (

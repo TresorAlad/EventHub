@@ -15,6 +15,7 @@ import EditProfileScreen from '../screens/EditProfileScreen';
 import SearchScreen from '../screens/SearchScreen';
 import FilterScreen from '../screens/FilterScreen';
 import PrivacySecurityScreen from '../screens/PrivacySecurityScreen';
+import OrganizerRequestScreen from '../screens/OrganizerRequestScreen';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
 import { Colors } from '../theme';
@@ -76,6 +77,7 @@ export default function RootNavigator() {
         options={cardScreenOptions}
       />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} options={cardScreenOptions} />
+      <Stack.Screen name="OrganizerRequest" component={OrganizerRequestScreen} options={cardScreenOptions} />
       <Stack.Screen name="Search" component={SearchScreen} options={cardScreenOptions} />
       <Stack.Screen name="Filter" component={FilterScreen} options={modalScreenOptions} />
       <Stack.Screen name="PrivacySecurity" component={PrivacySecurityScreen} options={cardScreenOptions} />
