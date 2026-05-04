@@ -128,7 +128,6 @@ export default function SignInScreen({ navigation }: any) {
                 style={styles.gradientBtn}
               >
                 <Text style={styles.signInText}>{submitting ? 'Connexion...' : 'Se Connecter'}</Text>
-                <AppIcon name="arrow-forward" size={20} color={Colors.white} />
               </LinearGradient>
             </TouchableOpacity>
           </View>
