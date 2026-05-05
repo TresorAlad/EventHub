@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import SplashScreen from '../screens/SplashScreen';
 import OnboardingScreen from '../screens/OnboardingScreen';
@@ -56,10 +57,38 @@ export default function RootNavigator() {
   const { user, initializing } = useAuth();
   useNotifications(user);
 
-  if (initializing) return <AuthLoadingScreen />;
+  const [onboardingSeen, setOnboardingSeen] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const value = await AsyncStorage.getItem('eventhub:onboarding_seen:v1');
+        if (!mounted) return;
+        setOnboardingSeen(value === '1');
+      } catch {
+        if (!mounted) return;
+        setOnboardingSeen(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const initialRouteName = useMemo(() => {
+    // Si l'utilisateur est déjà connecté, on va directement à l'app.
+    if (user) return 'Main';
+    // Première installation: on affiche Splash -> Onboarding avant SignIn.
+    if (onboardingSeen === false) return 'Splash';
+    // Sinon on démarre sur l'app (les écrans auth restent accessibles via navigation).
+    return 'Main';
+  }, [user, onboardingSeen]);
+
+  if (initializing || onboardingSeen === null) return <AuthLoadingScreen />;
 
   return (
-    <Stack.Navigator screenOptions={baseScreenOptions} initialRouteName="Main">
+    <Stack.Navigator screenOptions={baseScreenOptions} initialRouteName={initialRouteName}>
       {/* Écrans principaux accessibles à tous */}
       <Stack.Screen name="Main" component={MainTabNavigator} options={{ animation: 'fade' }} />
       <Stack.Screen name="EventDetails" component={EventDetailsScreen} options={cardScreenOptions} />

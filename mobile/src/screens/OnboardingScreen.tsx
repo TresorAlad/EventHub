@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing } from '../theme';
 import Animated, { interpolate, type SharedValue, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -63,16 +64,27 @@ export default function OnboardingScreen({ navigation }: any) {
     progress.value = withTiming(activeIndex, { duration: 240 });
   }, [activeIndex, progress]);
 
+  const finish = useCallback(async () => {
+    try {
+      await AsyncStorage.setItem('eventhub:onboarding_seen:v1', '1');
+    } catch {
+      // best-effort
+    }
+    // Après onboarding, on amène l'utilisateur sur l'accueil.
+    // La connexion reste possible plus tard (au moment d'une action protégée).
+    navigation.replace('Main');
+  }, [navigation]);
+
   const handleNext = useCallback(() => {
     if (activeIndex < slides.length - 1) {
       flatListRef.current?.scrollToIndex({ index: activeIndex + 1 });
       setActiveIndex(activeIndex + 1);
     } else {
-      navigation.replace('SignIn');
+      finish();
     }
-  }, [activeIndex, navigation]);
+  }, [activeIndex, finish]);
 
-  const handleSkip = useCallback(() => navigation.replace('SignIn'), [navigation]);
+  const handleSkip = useCallback(() => finish(), [finish]);
 
   const renderSlide = useCallback(({ item }: any) => {
     return (

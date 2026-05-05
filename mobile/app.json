@@ -27,6 +27,7 @@
     "android": {
       "package": "com.eventhub.togo",
       "googleServicesFile": "./google-services.json",
+      "icon": "./assets/icon.png",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#03045e"

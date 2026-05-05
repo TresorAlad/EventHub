@@ -27,6 +27,17 @@ export default function SignUpScreen({ navigation }: any) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const normalizeEmail = (value: string) => value.trim().toLowerCase();
+
+  const getAuthErrorMessage = (error: any) => {
+    const code = error?.code as string | undefined;
+    if (code === 'auth/email-already-in-use') return "Cet email est déjà utilisé.";
+    if (code === 'auth/invalid-email') return "Adresse email invalide.";
+    if (code === 'auth/weak-password') return "Mot de passe trop faible (minimum 6 caractères).";
+    if (code === 'auth/network-request-failed') return "Erreur réseau. Vérifiez votre connexion internet.";
+    return error?.message || 'Veuillez réessayer.';
+  };
+
   const handleSignUp = async () => {
     if (!fullName || !email || !password) {
       showAlert({
@@ -55,7 +66,7 @@ export default function SignUpScreen({ navigation }: any) {
 
     setSubmitting(true);
     try {
-      const credential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      const credential = await createUserWithEmailAndPassword(auth, normalizeEmail(email), password);
       await updateProfile(credential.user, { displayName: fullName.trim() });
       
       showAlert({
@@ -63,12 +74,19 @@ export default function SignUpScreen({ navigation }: any) {
         title: 'Inscription terminée !',
         message: 'Bienvenue dans la communauté EventHub. Ton compte a été créé avec succès.',
       });
+
+      // L'utilisateur est déjà connecté après l'inscription Firebase.
+      // On reset la stack pour ne pas rester bloqué sur SignUp.
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Main' }],
+      });
     } catch (error: any) {
       console.error(error);
       showAlert({
         variant: 'error',
         title: 'Inscription impossible',
-        message: error?.message || 'Veuillez réessayer.',
+        message: getAuthErrorMessage(error),
       });
     } finally {
       setSubmitting(false);
