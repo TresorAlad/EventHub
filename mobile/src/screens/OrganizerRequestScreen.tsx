@@ -118,7 +118,7 @@ export default function OrganizerRequestScreen({ navigation }: any) {
 
   const renderInput = (
     label: string,
-    value: string,
+    value: any,
     onChangeText: (text: string) => void,
     placeholder: string,
     icon: string,
@@ -127,6 +127,8 @@ export default function OrganizerRequestScreen({ navigation }: any) {
   ) => {
     const isFocused = focusedField === id;
     const isMultiline = props.multiline;
+    const safeValue =
+      typeof value === 'string' ? value : value === null || value === undefined ? '' : String(value);
 
     return (
       <View style={styles.field}>
@@ -147,8 +149,9 @@ export default function OrganizerRequestScreen({ navigation }: any) {
           </View>
           <TextInput
             style={[styles.input, isMultiline && styles.inputMultiline]}
-            value={value}
-            onChangeText={onChangeText}
+            value={safeValue}
+            editable={!submitting && !loading}
+            onChangeText={(t) => onChangeText(typeof t === 'string' ? t : String(t))}
             placeholder={placeholder}
             placeholderTextColor="#A0AEC0"
             onFocus={() => setFocusedField(id)}
@@ -260,7 +263,12 @@ export default function OrganizerRequestScreen({ navigation }: any) {
               {renderInput(
                 'Téléphone de contact',
                 phone,
-                setPhone,
+                (t: string) => {
+                  // Évite les caractères invisibles/espaces qui peuvent "bloquer" certains claviers.
+                  // On garde + et les chiffres.
+                  const next = t.replace(/[^\d+]/g, '');
+                  setPhone(next);
+                },
                 'Ex: +228 90 00 00 00',
                 'call-outline',
                 'phone',

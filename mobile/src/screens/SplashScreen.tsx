@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Colors, FontSize, FontWeight, Fonts } from '../theme';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Constants from 'expo-constants';
 
 const { width } = Dimensions.get('window');
 
@@ -42,6 +43,8 @@ export default function SplashScreen({ navigation }: any) {
     }, 2800);
     return () => clearTimeout(timer);
   }, []);
+
+  const appVersion = Constants.expoConfig?.version || '1.0.0';
 
   return (
     <View style={styles.container}>
@@ -77,6 +80,7 @@ export default function SplashScreen({ navigation }: any) {
           <View style={styles.progressBarInactive} />
         </View>
         <Text style={styles.tagline}>Pioneering Togo's Tech Ecosystem</Text>
+        <Text style={styles.versionText}>v{appVersion}</Text>
       </Animated.View>
     </View>
   );
@@ -164,5 +168,12 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.regular,
     color: 'rgba(202, 240, 248, 0.7)',
     letterSpacing: 0.3,
+  },
+  versionText: {
+    marginTop: -4,
+    fontSize: 12,
+    fontFamily: Fonts.regular,
+    color: 'rgba(202, 240, 248, 0.7)',
+    letterSpacing: 0.6,
   },
 });
