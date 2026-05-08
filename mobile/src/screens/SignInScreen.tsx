@@ -14,7 +14,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import AppIcon from '../components/ui/AppIcon';
 import { Colors, FontSize, FontWeight, BorderRadius, Spacing, Shadows, Fonts } from '../theme';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { useAppAlert } from '../contexts/AppAlertContext';
 
@@ -25,6 +25,20 @@ export default function SignInScreen({ navigation }: any) {
   const [showPwd, setShowPwd] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  const normalizeEmail = (value: string) => value.trim().toLowerCase();
+
+  const getAuthErrorMessage = (error: any) => {
+    const code = error?.code as string | undefined;
+    if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
+      return "Email ou mot de passe incorrect.";
+    }
+    if (code === 'auth/invalid-email') return "Adresse email invalide.";
+    if (code === 'auth/user-disabled') return "Ce compte a été désactivé.";
+    if (code === 'auth/too-many-requests') return "Trop de tentatives. Réessayez plus tard.";
+    if (code === 'auth/network-request-failed') return "Erreur réseau. Vérifiez votre connexion internet.";
+    return error?.message || 'Connexion impossible avec ces identifiants.';
+  };
+
   const handleSignIn = async () => {
     if (!email || !password) {
       showAlert({ variant: 'warning', title: 'Champs requis', message: 'Veuillez remplir tous les champs.' });
@@ -33,13 +47,48 @@ export default function SignInScreen({ navigation }: any) {
 
     setSubmitting(true);
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), password);
+      await signInWithEmailAndPassword(auth, normalizeEmail(email), password);
+      // Sortie des écrans d'auth : évite de revenir sur SignIn au back.
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Main' }],
+      });
     } catch (error: any) {
       console.error(error);
       showAlert({
         variant: 'error',
         title: 'Erreur de connexion',
-        message: error?.message || 'Connexion impossible avec ces identifiants.',
+        message: getAuthErrorMessage(error),
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    const emailValue = normalizeEmail(email);
+    if (!emailValue) {
+      showAlert({
+        variant: 'warning',
+        title: 'Email requis',
+        message: "Entrez votre adresse email, puis appuyez sur « Mot de passe oublié ? ».",
+      });
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await sendPasswordResetEmail(auth, emailValue);
+      showAlert({
+        variant: 'success',
+        title: 'Email envoyé',
+        message: "Un email de réinitialisation a été envoyé (vérifiez aussi les spams).",
+      });
+    } catch (error: any) {
+      console.error(error);
+      showAlert({
+        variant: 'error',
+        title: 'Impossible',
+        message: getAuthErrorMessage(error),
       });
     } finally {
       setSubmitting(false);
@@ -110,7 +159,7 @@ export default function SignInScreen({ navigation }: any) {
                   <AppIcon name={showPwd ? "eye-off-outline" : "eye-outline"} size={20} color={Colors.textMuted} />
                 </TouchableOpacity>
               </View>
-              <TouchableOpacity style={styles.forgotBtn}>
+              <TouchableOpacity style={styles.forgotBtn} onPress={handleForgotPassword} disabled={submitting}>
                 <Text style={styles.forgotText}>Mot de passe oublié ?</Text>
               </TouchableOpacity>
             </View>

@@ -27,6 +27,7 @@
     "android": {
       "package": "com.eventhub.togo",
       "googleServicesFile": "./google-services.json",
+      "icon": "./assets/icon.png",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#03045e"
@@ -42,15 +43,15 @@
         "expo-build-properties",
         {
           "android": {
-            "enableProguardInReleaseBuilds": true,
-            "enableShrinkResourcesInReleaseBuilds": true
+            "enableProguardInReleaseBuilds": false,
+            "enableShrinkResourcesInReleaseBuilds": false,
+            "extraProguardRules": ""
           },
           "ios": {
             "useFrameworks": "static"
           }
         }
-      ],
-      "@sentry/react-native/expo"
+      ]
     ],
     "extra": {
       "eas": {

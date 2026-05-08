@@ -77,6 +77,16 @@ async function registerForPushNotificationsAsync() {
       return undefined;
     }
 
+    // Depuis Expo Go (SDK 53+), les push notifications distantes via expo-notifications
+    // ne sont plus supportées. Mais on peut quand même demander l'autorisation utilisateur.
+    // Le token push (FCM/APNS) nécessite un dev build.
+    if (Constants.appOwnership === 'expo') {
+      console.warn(
+        "Expo Go détecté: autorisation OK, mais pas de push token. Utilise un dev build (`npm run start:dev-client`) pour tester les push notifications."
+      );
+      return undefined;
+    }
+
     try {
       // Expo Push Token: Works with expo-server-sdk
       const projectId = Constants?.expoConfig?.extra?.eas?.projectId || Constants?.easConfig?.projectId;

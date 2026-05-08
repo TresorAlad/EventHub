@@ -8,6 +8,7 @@ import EventImage from '../components/EventImage';
 import { useAppAlert } from '../contexts/AppAlertContext';
 import { useState } from 'react';
 import AppIcon from '../components/ui/AppIcon';
+import Constants from 'expo-constants';
 
 const SETTINGS = [
   { id: 'edit', icon: 'pencil-outline', label: 'Modifier le profil' },
@@ -19,6 +20,7 @@ export default function ProfileScreen({ navigation, route }: any) {
   const { logout, dbUser, user, refreshUser } = useAuth();
   const { showAlert } = useAppAlert();
   const [requesting, setRequesting] = useState(false);
+  const appVersion = Constants.expoConfig?.version || '1.0.0';
 
   if (!user || !dbUser) {
     return (
@@ -209,6 +211,10 @@ export default function ProfileScreen({ navigation, route }: any) {
           <AppIcon name="log-out-outline" size={20} color={Colors.textPrimary} />
           <Text style={styles.logoutText}>DÉCONNEXION</Text>
         </TouchableOpacity>
+
+        <View style={styles.versionWrap}>
+          <Text style={styles.versionText}>Version {appVersion}</Text>
+        </View>
       </ScrollView>
     </View>
   );
@@ -263,6 +269,15 @@ const styles = StyleSheet.create({
     paddingVertical: 16, marginBottom: Spacing.lg, ...Shadows.card,
   },
   logoutText: { fontSize: FontSize.sm, fontWeight: FontWeight.bold, color: Colors.textPrimary, letterSpacing: 1 },
+  versionWrap: {
+    alignItems: 'center',
+    paddingBottom: 24,
+  },
+  versionText: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    letterSpacing: 0.4,
+  },
   loginPrompt: {
     flex: 1,
     justifyContent: 'center',

@@ -94,6 +94,40 @@ export default function CreateEventScreen({ route, navigation }: any) {
   const handlePublish = async () => {
     setLoading(true);
     try {
+      // Validations minimales côté client pour éviter un 422/403 opaque
+      if (!title || !organizer || !description) {
+        showAlert({
+          variant: 'warning',
+          title: 'Champs requis',
+          message: 'Veuillez remplir le titre, la communauté et la description.',
+        });
+        return;
+      }
+      if (eventType === 'in-person' && !location) {
+        showAlert({ variant: 'warning', title: 'Champs requis', message: "Veuillez saisir l'adresse de l'événement." });
+        return;
+      }
+      if (eventType === 'online' && !meetingLink) {
+        showAlert({ variant: 'warning', title: 'Champs requis', message: 'Veuillez saisir le lien du meeting.' });
+        return;
+      }
+      if (eventType === 'hybrid' && (!location || !meetingLink)) {
+        showAlert({
+          variant: 'warning',
+          title: 'Champs requis',
+          message: "Pour un événement hybride, merci de renseigner l'adresse ET le lien du meeting.",
+        });
+        return;
+      }
+      if (isExternal && !externalLink) {
+        showAlert({
+          variant: 'warning',
+          title: 'URL requise',
+          message: "Veuillez renseigner l'URL d'inscription (site externe).",
+        });
+        return;
+      }
+
       const formData = new FormData();
       formData.append('title', title);
       formData.append('organizer', organizer);
@@ -107,12 +141,18 @@ export default function CreateEventScreen({ route, navigation }: any) {
         formData.append('endDate', endDateTime);
       }
 
-      formData.append('location', eventType === 'in-person' ? location : meetingLink);
+      // Backend supporte uniquement Online | InPlace (pas de Hybrid). On envoie InPlace par défaut,
+      // et on conserve l'URL de meeting (si hybride) dans `externalLink` quand c'est possible.
+      const resolvedLocation = eventType === 'online' ? meetingLink : location;
+      formData.append('location', resolvedLocation);
       formData.append('description', description);
       formData.append('participationMode', eventType === 'online' ? 'Online' : 'InPlace');
       formData.append('registrationMode', isExternal ? 'External' : 'Internal');
-      if (isExternal && externalLink) {
+      // Si "externe", on utilise le lien fourni. Si "hybride" interne, on stocke au moins le meeting link.
+      if (isExternal) {
         formData.append('externalLink', externalLink);
+      } else if (eventType === 'hybrid' && meetingLink) {
+        formData.append('externalLink', meetingLink);
       }
 
       if (image && !image.startsWith('http')) {
@@ -136,10 +176,26 @@ export default function CreateEventScreen({ route, navigation }: any) {
       navigation.goBack();
     } catch (error: any) {
       console.error(error?.response?.data || error);
+      const status = error?.response?.status;
+      const apiMessage =
+        error?.response?.data?.message || error?.response?.data?.error || error?.message;
+      if (status === 403) {
+        showAlert({
+          variant: 'error',
+          title: 'Accès refusé',
+          message: "Votre compte n'est pas encore validé comme organisateur.",
+        });
+        return;
+      }
       showAlert({
         variant: 'error',
         title: 'Erreur',
-        message: isEditing ? 'Échec de la modification.' : "Échec de la publication de l'événement.",
+        message:
+          (typeof apiMessage === 'string' && apiMessage.trim().length > 0
+            ? apiMessage
+            : isEditing
+              ? 'Échec de la modification.'
+              : "Échec de la publication de l'événement."),
       });
     } finally {
       setLoading(false);
