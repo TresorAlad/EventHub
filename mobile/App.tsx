@@ -22,7 +22,6 @@ import RootNavigator from './src/navigation/RootNavigator';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { asyncStoragePersister, queryClient } from './src/lib/queryClient';
 import { warmupBackend } from './src/services/api';
-import { initSentry } from './src/lib/sentry';
 import { AppAlertProvider, useAppAlert } from './src/contexts/AppAlertContext';
 import * as Updates from 'expo-updates';
 
@@ -40,10 +39,6 @@ warmupBackend();
 // En dev build, on pourra brancher FCM natif sans rework du reste.
 
 export default function App() {
-  useEffect(() => {
-    initSentry();
-  }, []);
-
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <PersistQueryClientProvider
@@ -91,6 +86,7 @@ function Bootstrap() {
         if (!fontsLoaded && !fontError) return;
         // En dev (Expo Go), `expo-updates` ne sert pas. En build, on notifie.
         if (__DEV__) return;
+        if (!Updates.isEnabled) return;
         const update = await Updates.checkForUpdateAsync();
         if (!update.isAvailable) return;
         showAlert({
@@ -100,12 +96,20 @@ function Bootstrap() {
           primaryText: 'Mettre à jour',
           secondaryText: 'Plus tard',
           onPrimary: async () => {
-            await Updates.fetchUpdateAsync();
-            await Updates.reloadAsync();
+            try {
+              await Updates.fetchUpdateAsync();
+              await Updates.reloadAsync();
+            } catch {
+              showAlert({
+                variant: 'error',
+                title: 'Mise à jour',
+                message: 'Impossible de télécharger la mise à jour. Réessayez plus tard (connexion réseau).',
+              });
+            }
           },
         });
       } catch {
-        // best-effort
+        // best-effort : pas de blocage au démarrage si EAS Update est indisponible
       }
     };
     run();

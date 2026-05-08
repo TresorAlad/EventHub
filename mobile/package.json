@@ -4,8 +4,10 @@
   "main": "index.ts",
   "scripts": {
     "postinstall": "node scripts/patch-expo-tunnel-timeout.js",
-    "start": "node scripts/patch-expo-tunnel-timeout.js && node scripts/print-expo-go-url.js tunnel && npx expo start --go --tunnel",
-    "start:clear": "node scripts/patch-expo-tunnel-timeout.js && node scripts/print-expo-go-url.js tunnel && npx expo start --go --tunnel --clear",
+    "start": "node scripts/patch-expo-tunnel-timeout.js && node scripts/print-expo-go-url.js lan && npx expo start --go --lan",
+    "start:clear": "node scripts/patch-expo-tunnel-timeout.js && node scripts/print-expo-go-url.js lan && npx expo start --go --lan --clear",
+    "start:tunnel": "node scripts/patch-expo-tunnel-timeout.js && node scripts/print-expo-go-url.js tunnel && npx expo start --go --tunnel",
+    "start:tunnel:clear": "node scripts/patch-expo-tunnel-timeout.js && node scripts/print-expo-go-url.js tunnel && npx expo start --go --tunnel --clear",
     "start:lan": "node scripts/patch-expo-tunnel-timeout.js && node scripts/print-expo-go-url.js lan && npx expo start --go --lan",
     "start:lan:clear": "node scripts/patch-expo-tunnel-timeout.js && node scripts/print-expo-go-url.js lan && npx expo start --go --lan --clear",
     "start:dev-client": "node scripts/patch-expo-tunnel-timeout.js && npx expo start --dev-client --tunnel",
@@ -17,7 +19,8 @@
     "android:open": "node scripts/open-expo-go-android.js",
     "android:reverse": "adb reverse tcp:8081 tcp:8081",
     "ios": "npx expo run:ios",
-    "web": "npx expo start --web"
+    "web": "npx expo start --web",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
@@ -49,7 +52,7 @@
     "expo-status-bar": "~3.0.9",
     "expo-updates": "~29.0.17",
     "expo-web-browser": "~15.0.11",
-    "firebase": "^12.12.1",
+    "firebase": "^11.0.0",
     "lucide-react-native": "^1.14.0",
     "react": "19.1.0",
     "react-native": "0.81.5",
@@ -57,7 +60,7 @@
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
-    "react-native-svg": "^15.12.1",
+    "react-native-svg": "15.12.1",
     "react-native-worklets": "0.5.1"
   },
   "devDependencies": {

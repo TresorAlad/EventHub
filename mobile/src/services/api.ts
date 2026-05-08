@@ -2,8 +2,10 @@ import axios from 'axios';
 import axiosRetry, { exponentialDelay, isNetworkOrIdempotentRequestError } from 'axios-retry';
 import { getCachedIdToken } from '../lib/firebaseToken';
 
-// Backend production (Vercel)
-const API_URL = 'https://backend-vhub.vercel.app/api';
+// `EXPO_PUBLIC_API_URL` (voir `.env.example`) ; repli prod Vercel si absent.
+const API_URL =
+  (typeof process !== 'undefined' && process.env.EXPO_PUBLIC_API_URL?.trim()) ||
+  'https://backend-vhub.vercel.app/api';
 
 const api = axios.create({
   baseURL: API_URL,

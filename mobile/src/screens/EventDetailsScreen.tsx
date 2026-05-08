@@ -19,7 +19,23 @@ export default function EventDetailsScreen({ navigation, route }: any) {
   const registrationLink = event.externalLink || 'https://external-platform.com';
   const participationMode = event.participationMode || 'InPlace';
 
-  const isOrganizer = dbUser?.id === event.organizerId || event.organizer?.id === dbUser?.id || false;
+  // Sans compte, pas d'id : ne pas comparer organizerId absent (undefined === undefined).
+  const myId = dbUser?.id;
+  const isOrganizer =
+    myId != null &&
+    ((event.organizerId != null && String(myId) === String(event.organizerId)) ||
+      (event.organizer?.id != null && String(myId) === String(event.organizer.id)));
+
+  // Événement créé depuis l’admin web : organizerId = compte ADMIN → pas de suivi inscrits sur mobile.
+  // Événement créé par un ORGANIZER (app) : interne → suivi ; externe → pas de suivi sur EventHub.
+  const organizerAccountRole = event.organizer?.role as string | undefined;
+  const isAdminOwnedEvent = organizerAccountRole === 'ADMIN';
+  const isCommunityOrganizerEvent =
+    !isAdminOwnedEvent &&
+    (organizerAccountRole === 'ORGANIZER' || organizerAccountRole === undefined);
+  const showAttendeeManagement = isOrganizer && isCommunityOrganizerEvent && !isExternal;
+  const showOrganizerExternalNotice = isOrganizer && isCommunityOrganizerEvent && isExternal;
+  const showAdminOwnerBar = isOrganizer && isAdminOwnedEvent;
 
   const bannerImage = event.imageUrl ? { uri: event.imageUrl } : require('../../assets/onboarding_tech_3.png');
   const orgName = event.organizer?.name || event.organizer || 'Communauté Tech';
@@ -41,7 +57,7 @@ export default function EventDetailsScreen({ navigation, route }: any) {
   useEffect(() => {
     let mounted = true;
     const load = async () => {
-      if (!event?.id) return;
+      if (!event?.id || !dbUser) return;
       try {
         const s = await getEventInteractions(event.id);
         if (!mounted) return;
@@ -56,9 +72,18 @@ export default function EventDetailsScreen({ navigation, route }: any) {
     return () => {
       mounted = false;
     };
-  }, [event?.id]);
+  }, [event?.id, dbUser?.id]);
+
+  const goToProfileForAuth = () => {
+    navigation.navigate('Main', { screen: 'Profile' });
+  };
 
   const handleRegister = async () => {
+    if (!dbUser) {
+      goToProfileForAuth();
+      return;
+    }
+
     if (isExternal) {
       showAlert({
         variant: 'info',
@@ -76,18 +101,6 @@ export default function EventDetailsScreen({ navigation, route }: any) {
         },
       });
     } else {
-      if (!dbUser) {
-        showAlert({
-          variant: 'info',
-          title: 'Connexion Requise',
-          message: 'Vous devez être connecté pour vous inscrire à cet événement.',
-          primaryText: 'Se connecter',
-          secondaryText: 'Annuler',
-          onPrimary: () => navigation.navigate('SignIn'),
-        });
-        return;
-      }
-
       if (eventExpired) {
         showAlert({
           variant: 'warning',
@@ -177,6 +190,10 @@ export default function EventDetailsScreen({ navigation, route }: any) {
               <TouchableOpacity
                 style={[styles.followBtn, following && { backgroundColor: Colors.primary }]}
                 onPress={async () => {
+                  if (!dbUser) {
+                    goToProfileForAuth();
+                    return;
+                  }
                   try {
                     const organizerId = event.organizerId || event.organizer?.id;
                     if (!organizerId) return;
@@ -272,6 +289,10 @@ export default function EventDetailsScreen({ navigation, route }: any) {
         <TouchableOpacity
           style={styles.bookmarkBtn}
           onPress={async () => {
+            if (!dbUser) {
+              goToProfileForAuth();
+              return;
+            }
             try {
               const r = await toggleFavorite(event.id);
               setFavorited(Boolean(r?.favorited));
@@ -287,23 +308,78 @@ export default function EventDetailsScreen({ navigation, route }: any) {
           <AppIcon name={favorited ? 'bookmark' : 'bookmark-outline'} size={22} color={Colors.textPrimary} />
         </TouchableOpacity>
 
-        {isOrganizer ? (
+        {showAttendeeManagement ? (
           <TouchableOpacity
-            style={[styles.registerBtn, { backgroundColor: '#10b981', flexDirection: 'row', justifyContent: 'center', gap: 8 }]}
+            style={[
+              styles.registerBtn,
+              {
+                backgroundColor: '#10b981',
+                flexDirection: 'row',
+                justifyContent: 'center',
+                gap: 8,
+              },
+            ]}
             onPress={() =>
               showAlert({
                 variant: 'info',
                 title: 'Gestion des inscrits',
                 message: `Vous avez actuellement ${event.attendees || 0} participants inscrits.\n\nLe dashboard de tracking sera disponible dans une prochaine mise à jour.`,
               })
-            }>
+            }
+          >
             <AppIcon name="people" size={20} color="#fff" />
-            <Text style={styles.registerText}>Suivre les inscrits ({event.attendees || 0})</Text>
+            <Text style={styles.registerText}>{`Suivre les inscrits (${event.attendees || 0})`}</Text>
+          </TouchableOpacity>
+        ) : showOrganizerExternalNotice ? (
+          <TouchableOpacity
+            style={[
+              styles.registerBtn,
+              {
+                backgroundColor: Colors.textMuted,
+                flexDirection: 'row',
+                justifyContent: 'center',
+                gap: 8,
+              },
+            ]}
+            onPress={() =>
+              showAlert({
+                variant: 'info',
+                title: 'Lien externe',
+                message:
+                  "Inscriptions gérées hors EventHub : le suivi des participants n'est pas disponible sur l'application.",
+              })
+            }
+          >
+            <AppIcon name="link-outline" size={20} color="#fff" />
+            <Text style={styles.registerText}>Lien externe (pas de suivi)</Text>
+          </TouchableOpacity>
+        ) : showAdminOwnerBar ? (
+          <TouchableOpacity
+            style={[
+              styles.registerBtn,
+              {
+                backgroundColor: Colors.textMuted,
+                flexDirection: 'row',
+                justifyContent: 'center',
+                gap: 8,
+              },
+            ]}
+            onPress={() =>
+              showAlert({
+                variant: 'info',
+                title: 'Événement admin',
+                message:
+                  'Cet événement a été créé depuis l’espace admin. Les utilisateurs mobile peuvent uniquement s’inscrire (interne ou externe). Le suivi des inscrits se fait depuis le web admin.',
+              })
+            }
+          >
+            <AppIcon name="information-circle" size={20} color="#fff" />
+            <Text style={styles.registerText}>Géré depuis l’admin web</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity style={[styles.registerBtn, eventExpired && { backgroundColor: '#94a3b8' }]} onPress={handleRegister}>
             <Text style={styles.registerText}>
-              {eventExpired ? 'Expiré' : registered ? 'Déjà inscrit' : isExternal ? "S'inscrire" : "S'inscrire Maintenant"}
+              {eventExpired ? 'Expiré' : registered ? 'Déjà inscrit' : "S'inscrire"}
             </Text>
           </TouchableOpacity>
         )}

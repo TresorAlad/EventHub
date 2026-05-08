@@ -37,29 +37,40 @@ console.log('══════════════════════�
 if (mode === 'tunnel') {
   console.log('  Mode TUNNEL (Expo Go)');
   console.log('');
-  console.log('  • Attendez dans le terminal : tunnel prêt + QR.');
-  console.log('  • Dans Expo Go : utilisez le SCAN intégré (pas l’appareil photo).');
-  console.log('  • Ou : Expo Go → « Entrer l’URL » → copiez l’URL exp://… du terminal.');
+  console.log('  • Laissez ce terminal ouvert : si vous l’arrêtez, l’URL *.exp.direct ne marche plus.');
+  console.log('  • Attendez « Tunnel ready » puis scannez le QR affiché par Metro.');
+  console.log('  • Dans Expo Go : SCAN intégré (pas l’appareil photo).');
+  console.log('  • Ou : Expo Go → « Entrer l’URL » → copiez l’URL exp://… du terminal (pas une vieille URL).');
   console.log('');
   console.log('  Si erreur « ngrok tunnel took too long » :');
   console.log('    1) Compte gratuit https://dashboard.ngrok.com');
   console.log('    2) Terminal : ngrok config add-authtoken <VOTRE_TOKEN>');
-  console.log('    3) Relancez : npm start');
+  console.log('    3) Relancez : npm run start:tunnel');
   console.log('');
-  console.log('  (Option) Variable d’environnement : NGROK_AUTHTOKEN=<token> avant npm start');
+  console.log('  (Option) Variable d’environnement : NGROK_AUTHTOKEN=<token> avant npm run start:tunnel');
 } else {
   const ip = getLanIp();
-  const port = process.env.EXPO_METRO_PORT || '8081';
+  const port = process.env.EXPO_METRO_PORT || process.env.RCT_METRO_PORT || '8081';
   const url = `exp://${ip}:${port}`;
-  console.log('  Mode LAN (Expo Go)');
+  console.log('  Mode LAN (Expo Go) — PC et téléphone sur le même Wi‑Fi');
   console.log('');
   console.log('  Ne scannez pas avec l’appareil photo Android (souvent ouvert dans Chrome).');
   console.log('  Ouvrez Expo Go → « Entrer l’URL » et collez :');
   console.log('');
   console.log('   ', url);
   console.log('');
-  console.log('  USB : npm run android:open');
+  console.log('  Si Metro utilise un autre port (ex. 8083), copiez l’URL exp://… du terminal');
+  console.log('  ou relancez avec : $env:EXPO_METRO_PORT=\"8083\" ; npm start   (PowerShell)');
+  console.log('');
+  console.log('  USB Android : npm run android:reverse puis npm run android:open');
 }
+
+console.log('');
+console.log('  ── Si Expo Go affiche « Packager is not running » (souvent avec *.exp.direct) ──');
+console.log('  1) Sur le PC : relancez Metro (npm start en LAN, ou npm run start:tunnel).');
+console.log('  2) Dans Expo Go : accueil → … sur le projet → Retirer / oublier, ou « Entrer l’URL »');
+console.log('     avec l’URL tout juste affichée (ne réutilisez pas un vieux lien du tunnel).');
+console.log('');
 
 console.log('══════════════════════════════════════════════════════════');
 console.log('');

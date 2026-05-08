@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import api from '../services/api';
 import { useEffect, useRef } from 'react';
+import type { User } from 'firebase/auth';
 
 // Configure how notifications are displayed when the app is in the foreground
 Notifications.setNotificationHandler({
@@ -16,7 +17,7 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export const useNotifications = (user: any) => {
+export const useNotifications = (user: User | null) => {
   const lastRegisteredUid = useRef<string | null>(null);
   useEffect(() => {
     const uid = user?.uid ? String(user.uid) : null;
@@ -47,8 +48,8 @@ export const useNotifications = (user: any) => {
     });
 
     return () => {
-      Notifications.removeNotificationSubscription(notificationListener);
-      Notifications.removeNotificationSubscription(responseListener);
+      notificationListener.remove();
+      responseListener.remove();
     };
   }, [user?.uid]);
 };
@@ -82,7 +83,7 @@ async function registerForPushNotificationsAsync() {
     // Le token push (FCM/APNS) nécessite un dev build.
     if (Constants.appOwnership === 'expo') {
       console.warn(
-        "Expo Go détecté: autorisation OK, mais pas de push token. Utilise un dev build (`npm run start:dev-client`) pour tester les push notifications."
+        "Expo Go détecté: autorisation OK, mais pas de push token. Utilise un dev build (`pnpm run start:dev-client`) pour tester les push notifications."
       );
       return undefined;
     }
@@ -90,7 +91,7 @@ async function registerForPushNotificationsAsync() {
     try {
       // Expo Push Token: Works with expo-server-sdk
       const projectId = Constants?.expoConfig?.extra?.eas?.projectId || Constants?.easConfig?.projectId;
-      
+
       const tokenData = await Notifications.getExpoPushTokenAsync({
         projectId,
       });
