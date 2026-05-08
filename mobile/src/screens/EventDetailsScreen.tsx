@@ -14,10 +14,10 @@ export default function EventDetailsScreen({ navigation, route }: any) {
   const { dbUser } = useAuth();
   const { showAlert } = useAppAlert();
   const event = route.params?.event || {};
-  
+
   const isExternal = event.registrationMode === 'External' || event.externalLink;
   const registrationLink = event.externalLink || 'https://external-platform.com';
-  const participationMode = event.participationMode || 'InPlace'; 
+  const participationMode = event.participationMode || 'InPlace';
 
   const isOrganizer = dbUser?.id === event.organizerId || event.organizer?.id === dbUser?.id || false;
 
@@ -148,20 +148,12 @@ export default function EventDetailsScreen({ navigation, route }: any) {
             </TouchableOpacity>
             <Text style={styles.topTitle}>EventHub</Text>
             <View style={styles.topRight}>
-              <TouchableOpacity
-                style={styles.iconBtn}
-                onPress={() =>
-                  showAlert({ variant: 'success', title: 'Partager', message: "Lien de l'événement copié !" })
-                }
-              >
-                <AppIcon name="share-social-outline" size={20} color={Colors.primary} />
-              </TouchableOpacity>
               <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Search')}>
                 <AppIcon name="search-outline" size={20} color={Colors.primary} />
               </TouchableOpacity>
-              <Image 
-                source={require('../../assets/logo.jpeg')} 
-                style={styles.avatar} 
+              <Image
+                source={require('../../assets/logo.jpeg')}
+                style={styles.avatar}
               />
             </View>
           </View>
@@ -209,7 +201,7 @@ export default function EventDetailsScreen({ navigation, route }: any) {
               <View style={styles.infoIcon}><AppIcon name="calendar-outline" size={20} color={Colors.primary} /></View>
               <View>
                 <Text style={styles.infoTitle}>{eventDate.toLocaleDateString('fr-FR')}</Text>
-                <Text style={styles.infoSub}>{eventDate.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})} GMT</Text>
+                <Text style={styles.infoSub}>{eventDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} GMT</Text>
               </View>
             </View>
             <View style={styles.divider} />
@@ -230,8 +222,8 @@ export default function EventDetailsScreen({ navigation, route }: any) {
                 </Text>
               </View>
             </View>
-            <TouchableOpacity 
-              style={styles.mapBox} 
+            <TouchableOpacity
+              style={styles.mapBox}
               onPress={() => {
                 if (participationMode === 'Online' || participationMode === 'online') {
                   const link = event.location?.startsWith('http') ? event.location : 'https://meet.google.com';
@@ -256,27 +248,23 @@ export default function EventDetailsScreen({ navigation, route }: any) {
 
           <Text style={styles.sectionTitle}>À propos de l'événement</Text>
           <Text style={styles.description}>
-             {event.description || "Rejoignez ce superbe événement pour découvrir et partager autour des technologies."}
+            {event.description || "Rejoignez ce superbe événement pour découvrir et partager autour des technologies."}
           </Text>
 
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Intervenants</Text>
-            <TouchableOpacity><Text style={styles.seeAll}>VOIR TOUT</Text></TouchableOpacity>
-          </View>
-          <View style={styles.speakersRow}>
-            {/* Speakers mapping would go here */}
-          </View>
-
-          <Text style={styles.sectionTitle}>Participants</Text>
-          <View style={styles.attendeesRow}>
-            {[0,1,2,3,4].map((i) => (
-              <View key={i} style={[styles.attendeeAvatar, { marginLeft: i === 0 ? 0 : -12 }]} />
-            ))}
-            <View style={styles.countBadge}>
-              <Text style={styles.countText}>+{event.attendees || 0}</Text>
-            </View>
-            <Text style={styles.attendeeText}>et {event.attendees || 0} autres y participent</Text>
-          </View>
+          {!isExternal && (
+            <>
+              <Text style={styles.sectionTitle}>Participants</Text>
+              <View style={styles.attendeesRow}>
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <View key={i} style={[styles.attendeeAvatar, { marginLeft: i === 0 ? 0 : -12 }]} />
+                ))}
+                <View style={styles.countBadge}>
+                  <Text style={styles.countText}>+{event.attendees || 0}</Text>
+                </View>
+                <Text style={styles.attendeeText}>et {event.attendees || 0} autres y participent</Text>
+              </View>
+            </>
+          )}
         </View>
       </ScrollView>
 
@@ -298,10 +286,10 @@ export default function EventDetailsScreen({ navigation, route }: any) {
         >
           <AppIcon name={favorited ? 'bookmark' : 'bookmark-outline'} size={22} color={Colors.textPrimary} />
         </TouchableOpacity>
-        
+
         {isOrganizer ? (
-          <TouchableOpacity 
-            style={[styles.registerBtn, { backgroundColor: '#10b981', flexDirection: 'row', justifyContent: 'center', gap: 8 }]} 
+          <TouchableOpacity
+            style={[styles.registerBtn, { backgroundColor: '#10b981', flexDirection: 'row', justifyContent: 'center', gap: 8 }]}
             onPress={() =>
               showAlert({
                 variant: 'info',
@@ -315,7 +303,7 @@ export default function EventDetailsScreen({ navigation, route }: any) {
         ) : (
           <TouchableOpacity style={[styles.registerBtn, eventExpired && { backgroundColor: '#94a3b8' }]} onPress={handleRegister}>
             <Text style={styles.registerText}>
-              {eventExpired ? 'Expiré' : registered ? 'Déjà inscrit' : isExternal ? "S'inscrire (Externe)" : "S'inscrire Maintenant"}
+              {eventExpired ? 'Expiré' : registered ? 'Déjà inscrit' : isExternal ? "S'inscrire" : "S'inscrire Maintenant"}
             </Text>
           </TouchableOpacity>
         )}
@@ -374,15 +362,8 @@ const styles = StyleSheet.create({
   infoSub: { fontSize: FontSize.sm, color: Colors.textMuted },
   divider: { height: 1, backgroundColor: Colors.border },
   mapBox: { height: 100, borderRadius: BorderRadius.md, backgroundColor: Colors.inputBg, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   sectionTitle: { fontSize: FontSize.xl, fontWeight: FontWeight.extrabold, color: Colors.primary },
-  seeAll: { fontSize: FontSize.sm, fontWeight: FontWeight.bold, color: Colors.primary, letterSpacing: 0.5 },
   description: { fontSize: FontSize.md, color: Colors.textSecondary, lineHeight: 23 },
-  speakersRow: { flexDirection: 'row', gap: Spacing.md },
-  speakerCard: { flex: 1, backgroundColor: Colors.white, borderRadius: BorderRadius.lg, padding: Spacing.sm, alignItems: 'center', gap: 6, ...Shadows.card },
-  speakerImg: { width: '100%', height: 110, borderRadius: BorderRadius.md, backgroundColor: Colors.backgroundDark },
-  speakerName: { fontSize: FontSize.sm, fontWeight: FontWeight.bold, color: Colors.textPrimary, textAlign: 'center' },
-  speakerRole: { fontSize: FontSize.xs, color: Colors.textMuted, textAlign: 'center' },
   attendeesRow: { flexDirection: 'row', alignItems: 'center' },
   attendeeAvatar: { width: 34, height: 34, borderRadius: 99, backgroundColor: Colors.backgroundDark, borderWidth: 2, borderColor: Colors.white },
   countBadge: { width: 34, height: 34, borderRadius: 99, backgroundColor: Colors.background, alignItems: 'center', justifyContent: 'center', marginLeft: -12, borderWidth: 2, borderColor: Colors.white },

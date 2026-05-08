@@ -33,6 +33,23 @@ export const useNotifications = (user: any) => {
       });
       lastRegisteredUid.current = uid;
     });
+
+    // Listen for incoming notifications when app is in foreground
+    const notificationListener = Notifications.addNotificationReceivedListener(notification => {
+      console.log('Notification received in foreground:', notification);
+    });
+
+    // Listen for user interaction with notification (tapping it)
+    const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log('Notification response received:', response);
+      // Logic for navigation can be added here if needed, 
+      // but usually requires access to a navigation reference.
+    });
+
+    return () => {
+      Notifications.removeNotificationSubscription(notificationListener);
+      Notifications.removeNotificationSubscription(responseListener);
+    };
   }, [user?.uid]);
 };
 
@@ -48,15 +65,6 @@ async function registerForPushNotificationsAsync() {
     });
   }
 
-  // Depuis Expo Go (SDK 53+), les push notifications distantes via expo-notifications
-  // ne sont plus supportées. Il faut un dev build (expo-dev-client) pour récupérer un push token.
-  if (Constants.appOwnership === 'expo') {
-    console.warn(
-      "Expo Go détecté: récupération du push token désactivée. Utilise un dev build (`npm run start:dev-client`) pour tester les push notifications."
-    );
-    return undefined;
-  }
-
   if (Device.isDevice) {
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
@@ -70,10 +78,14 @@ async function registerForPushNotificationsAsync() {
     }
 
     try {
-      // Firebase (FCM) direct: device push token (Android => FCM)
-      const tokenData = await Notifications.getDevicePushTokenAsync();
+      // Expo Push Token: Works with expo-server-sdk
+      const projectId = Constants?.expoConfig?.extra?.eas?.projectId || Constants?.easConfig?.projectId;
+      
+      const tokenData = await Notifications.getExpoPushTokenAsync({
+        projectId,
+      });
       token = tokenData.data;
-      console.log('FCM Token:', token);
+      console.log('Expo Push Token:', token);
     } catch (err) {
       console.warn('Erreur lors de la récupération du push token:', err);
     }
